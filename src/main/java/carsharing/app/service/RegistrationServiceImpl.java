@@ -3,7 +3,7 @@ package carsharing.app.service;
 import carsharing.app.dto.register.UserRequestDto;
 import carsharing.app.dto.register.UserResponseDto;
 import carsharing.app.exception.UserExistException;
-import carsharing.app.mapper.UserMapper;
+import carsharing.app.mapper.UserRegistrationMapper;
 import carsharing.app.model.RoleName;
 import carsharing.app.model.User;
 import carsharing.app.repository.UserRepository;
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 public class RegistrationServiceImpl implements RegistrationService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final UserMapper userMapper;
+    private final UserRegistrationMapper userMapper;
 
     @Override
     public UserResponseDto register(UserRequestDto userRequestDto) {
