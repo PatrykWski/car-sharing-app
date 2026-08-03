@@ -1,0 +1,14 @@
+package carsharing.app.controller;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@Tag(name = "Managing authentication and user registration",
+        description = "Endpoints for user management")
+@RequiredArgsConstructor
+@RequestMapping("/users")
+public class UserController {
+}

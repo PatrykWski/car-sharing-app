@@ -34,6 +34,16 @@ public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler
         return new ResponseEntity<>(exceptionResponse, status);
     }
 
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Object> handleAllUncaughtExceptions(Exception ex) {
+        ExceptionResponse exceptionResponse = new ExceptionResponse(
+                Instant.now(),
+                "An unexpected error occurred: " + ex.getMessage(),
+                HttpStatus.INTERNAL_SERVER_ERROR.value()
+        );
+        return new ResponseEntity<>(exceptionResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<Object> handleEntityNotFoundException(EntityNotFoundException ex) {
         ExceptionResponse exceptionResponse = new ExceptionResponse(
@@ -44,13 +54,23 @@ public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler
         return new ResponseEntity<>(exceptionResponse, ex.getStatus());
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<Object> handleAllUncaughtExceptions(Exception ex) {
+    @ExceptionHandler(LoginException.class)
+    public ResponseEntity<Object> handleLoginException(LoginException ex) {
         ExceptionResponse exceptionResponse = new ExceptionResponse(
                 Instant.now(),
-                "An unexpected error occurred: " + ex.getMessage(),
-                HttpStatus.INTERNAL_SERVER_ERROR.value()
+                ex.getMessage(),
+                ex.getStatus().value()
         );
-        return new ResponseEntity<>(exceptionResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(exceptionResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(UserExistException.class)
+    public ResponseEntity<Object> handleUserExistException(UserExistException ex) {
+        ExceptionResponse exceptionResponse = new ExceptionResponse(
+                Instant.now(),
+                ex.getMessage(),
+                ex.getStatus().value()
+        );
+        return new ResponseEntity<>(exceptionResponse, HttpStatus.CONFLICT);
     }
 }
