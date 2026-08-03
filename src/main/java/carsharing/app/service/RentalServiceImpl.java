@@ -1,4 +1,92 @@
 package carsharing.app.service;
 
-public class RentalServiceImpl {
+import carsharing.app.dto.rental.RentalDto;
+import carsharing.app.dto.rental.RentalRequestDto;
+import carsharing.app.exception.AuthenticationException;
+import carsharing.app.exception.EmptyInventoryException;
+import carsharing.app.exception.EntityNotFoundException;
+import carsharing.app.mapper.RentalMapper;
+import carsharing.app.model.Car;
+import carsharing.app.model.Rental;
+import carsharing.app.model.User;
+import carsharing.app.repository.CarRepository;
+import carsharing.app.repository.RentalRepository;
+import carsharing.app.repository.UserRepository;
+import carsharing.app.service.interfaces.RentalService;
+import java.time.LocalDate;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Service;
+
+@RequiredArgsConstructor
+@Service
+public class RentalServiceImpl implements RentalService {
+    private final RentalMapper rentalMapper;
+    private final RentalRepository rentalRepository;
+    private final CarRepository carRepository;
+    private final UserRepository userRepository;
+
+    @Override
+    public RentalDto addNewRental(UserDetails userDetails, RentalRequestDto requestDto) {
+        checkIfUserExist(requestDto.getUserId(), userDetails);
+
+        Car car = getCar(requestDto.getCarId());
+
+        if (car.getInventory() != 0) {
+            Rental rental = rentalMapper.toModel(requestDto);
+            car.setInventory(car.getInventory() - 1);
+            carRepository.save(car);
+            Rental savedRental = rentalRepository.save(rental);
+            return rentalMapper.toDto(savedRental);
+        }
+        throw new EmptyInventoryException("There are no more cars available with id: "
+                + car.getId() + " in the shop, choose another one");
+    }
+
+    @Override
+    public Page<RentalDto> getAllRentalsByUserId(Long userId, UserDetails userDetails,
+                                                 Pageable pageable) {
+        checkIfUserExist(userId, userDetails);
+        return rentalRepository.findByUserId(userId, pageable)
+                .map(rentalMapper::toDto);
+    }
+
+    @Override
+    public RentalDto getSpecificRentalById(Long id) {
+        Rental rental = getRentalById(id);
+        return rentalMapper.toDto(rental);
+    }
+
+    @Override
+    public RentalDto setActualReturnDate(Long id) {
+        Rental rental = getRentalById(id);
+        rental.setActualReturnDate(LocalDate.now());
+        Car car = getCar(rental.getCarId());
+        car.setInventory(car.getInventory() + 1);
+        carRepository.save(car);
+        Rental savedRental = rentalRepository.save(rental);
+        return rentalMapper.toDto(savedRental);
+    }
+
+    private Car getCar(Long id) {
+        return carRepository.findById(id).orElseThrow(
+                () -> new EntityNotFoundException("Car with id: "
+                        + id + " doesn't exist"));
+    }
+
+    private void checkIfUserExist(Long id, UserDetails userDetails) {
+        User user = userRepository.findById(id).orElseThrow(
+                () -> new EntityNotFoundException("User with id: "
+                + id + " doesn't exist"));
+        if (!user.getEmail().equals(userDetails.getUsername())) {
+            throw new AuthenticationException("Email in token doesn't match user with id: " + id);
+        }
+    }
+
+    private Rental getRentalById(Long id) {
+        return rentalRepository.findById(id).orElseThrow(
+                () -> new EntityNotFoundException("Rental with id: " + id + " doesn't exist"));
+    }
 }
