@@ -46,10 +46,10 @@ public class RentalServiceImpl implements RentalService {
     }
 
     @Override
-    public Page<RentalDto> getAllRentalsByUserId(Long userId, UserDetails userDetails,
-                                                 Pageable pageable) {
+    public Page<RentalDto> getAllActualRentalsByUserId(Long userId, UserDetails userDetails,
+                                                       boolean isActive, Pageable pageable) {
         checkIfUserExist(userId, userDetails);
-        return rentalRepository.findByUserId(userId, pageable)
+        return rentalRepository.findRentalByActualReturnDate(userId, isActive, pageable)
                 .map(rentalMapper::toDto);
     }
 

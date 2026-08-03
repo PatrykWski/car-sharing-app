@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -42,11 +43,12 @@ public class RentalController {
     @GetMapping("/{userId}/all")
     @Operation(summary = "Get rentals", description = "Get rentals by user id")
     @PreAuthorize("hasAnyRole('MANAGER', 'CUSTOMER')")
-    public Page<RentalDto> getAllRentalsByUserId(@PathVariable Long userId,
+    public Page<RentalDto> getAllActualRentalsByUserId(@PathVariable Long userId,
                                                  @AuthenticationPrincipal UserDetails userDetails,
+                                                 @RequestParam boolean isActive,
                                                  @PageableDefault(size = 10, page = 0)
                                                  Pageable pageable) {
-        return rentalService.getAllRentalsByUserId(userId, userDetails, pageable);
+        return rentalService.getAllActualRentalsByUserId(userId, userDetails, isActive, pageable);
     }
 
     @GetMapping("/{id}")
