@@ -7,6 +7,7 @@ import carsharing.app.exception.EntityNotFoundException;
 import carsharing.app.mapper.CarMapper;
 import carsharing.app.model.Car;
 import carsharing.app.repository.CarRepository;
+import carsharing.app.service.interfaces.CarService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

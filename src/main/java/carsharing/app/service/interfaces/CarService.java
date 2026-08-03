@@ -1,4 +1,4 @@
-package carsharing.app.service;
+package carsharing.app.service.interfaces;
 
 import carsharing.app.dto.car.CarDto;
 import carsharing.app.dto.car.CarRequest;
