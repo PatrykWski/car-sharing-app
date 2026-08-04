@@ -16,4 +16,6 @@ public interface RentalService {
 
     RentalDto setActualReturnDate(Long id);
 
+    void checkIfRentalReturnDateIsNotLate();
+
 }

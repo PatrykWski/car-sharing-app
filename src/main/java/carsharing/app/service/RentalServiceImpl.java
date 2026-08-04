@@ -2,9 +2,11 @@ package carsharing.app.service;
 
 import carsharing.app.dto.rental.RentalDto;
 import carsharing.app.dto.rental.RentalRequestDto;
+import carsharing.app.dto.telegram.TelegramMessageRequest;
 import carsharing.app.exception.AuthenticationException;
 import carsharing.app.exception.EmptyInventoryException;
 import carsharing.app.exception.EntityNotFoundException;
+import carsharing.app.exception.NotificationError;
 import carsharing.app.mapper.RentalMapper;
 import carsharing.app.model.Car;
 import carsharing.app.model.Rental;
@@ -12,11 +14,15 @@ import carsharing.app.model.User;
 import carsharing.app.repository.CarRepository;
 import carsharing.app.repository.RentalRepository;
 import carsharing.app.repository.UserRepository;
+import carsharing.app.service.interfaces.NotificationService;
 import carsharing.app.service.interfaces.RentalService;
 import java.time.LocalDate;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +33,10 @@ public class RentalServiceImpl implements RentalService {
     private final RentalRepository rentalRepository;
     private final CarRepository carRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
+
+    @Value("${telegram.chatId}")
+    private String chatId;
 
     @Override
     public RentalDto addNewRental(UserDetails userDetails, RentalRequestDto requestDto) {
@@ -39,6 +49,14 @@ public class RentalServiceImpl implements RentalService {
             car.setInventory(car.getInventory() - 1);
             carRepository.save(car);
             Rental savedRental = rentalRepository.save(rental);
+
+            TelegramMessageRequest telegramMessageRequest = new TelegramMessageRequest(
+                    chatId,
+                    "New rental has been successfully created"
+            );
+
+            sendNotification(telegramMessageRequest);
+
             return rentalMapper.toDto(savedRental);
         }
         throw new EmptyInventoryException("There are no more cars available with id: "
@@ -70,6 +88,23 @@ public class RentalServiceImpl implements RentalService {
         return rentalMapper.toDto(savedRental);
     }
 
+    @Override
+    @Scheduled(cron = "0 0 9 * * *")
+    public void checkIfRentalReturnDateIsNotLate() {
+        List<Rental> rentals = rentalRepository.findAll();
+        List<Rental> listOfLateRentals = rentals.stream()
+                .filter(rental -> rental.getReturnDate().isBefore(LocalDate.now()))
+                .toList();
+        if (!listOfLateRentals.isEmpty()) {
+            TelegramMessageRequest telegramMessageRequest = new TelegramMessageRequest(
+                    chatId,
+                    "Reminding for everyone who didn't bring the car at the correct time "
+                            + "the penalty for each day of delay is 100$"
+            );
+            sendNotification(telegramMessageRequest);
+        }
+    }
+
     private Car getCar(Long id) {
         return carRepository.findById(id).orElseThrow(
                 () -> new EntityNotFoundException("Car with id: "
@@ -88,5 +123,13 @@ public class RentalServiceImpl implements RentalService {
     private Rental getRentalById(Long id) {
         return rentalRepository.findById(id).orElseThrow(
                 () -> new EntityNotFoundException("Rental with id: " + id + " doesn't exist"));
+    }
+
+    private void sendNotification(TelegramMessageRequest telegramMessageRequest) {
+        String result = notificationService.sendNotification(telegramMessageRequest);
+        if (result == null || result.isEmpty()) {
+            throw new NotificationError("Result from notificationService"
+                    + " was null or empty");
+        }
     }
 }
