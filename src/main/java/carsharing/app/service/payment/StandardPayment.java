@@ -3,6 +3,7 @@ package carsharing.app.service.payment;
 import carsharing.app.exception.EntityNotFoundException;
 import carsharing.app.exception.RentalNotFinished;
 import carsharing.app.model.Car;
+import carsharing.app.model.PaymentType;
 import carsharing.app.model.Rental;
 import carsharing.app.repository.CarRepository;
 import carsharing.app.repository.RentalRepository;
@@ -19,6 +20,7 @@ public class StandardPayment implements PaymentMethod {
 
     @Override
     public BigDecimal totalToPay(Long rentalId) {
+
         Rental rental = rentalRepository.findById(rentalId).orElseThrow(
                 () -> new EntityNotFoundException("Rental with id: "
                         + rentalId + " doesnt exist"));
@@ -39,5 +41,10 @@ public class StandardPayment implements PaymentMethod {
         }
 
         return new BigDecimal(daysBetween).multiply(car.getDailyFee());
+    }
+
+    @Override
+    public PaymentType getSupportedType() {
+        return PaymentType.PAYMENT;
     }
 }
