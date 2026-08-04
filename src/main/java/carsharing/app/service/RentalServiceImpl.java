@@ -17,12 +17,10 @@ import carsharing.app.repository.UserRepository;
 import carsharing.app.service.interfaces.NotificationService;
 import carsharing.app.service.interfaces.RentalService;
 import java.time.LocalDate;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -88,23 +86,6 @@ public class RentalServiceImpl implements RentalService {
         return rentalMapper.toDto(savedRental);
     }
 
-    @Override
-    @Scheduled(cron = "0 0 9 * * *")
-    public void checkIfRentalReturnDateIsNotLate() {
-        List<Rental> rentals = rentalRepository.findAll();
-        List<Rental> listOfLateRentals = rentals.stream()
-                .filter(rental -> rental.getReturnDate().isBefore(LocalDate.now()))
-                .toList();
-        if (!listOfLateRentals.isEmpty()) {
-            TelegramMessageRequest telegramMessageRequest = new TelegramMessageRequest(
-                    chatId,
-                    "Reminding for everyone who didn't bring the car at the correct time "
-                            + "the penalty for each day of delay is 100$"
-            );
-            sendNotification(telegramMessageRequest);
-        }
-    }
-
     private Car getCar(Long id) {
         return carRepository.findById(id).orElseThrow(
                 () -> new EntityNotFoundException("Car with id: "
@@ -114,7 +95,7 @@ public class RentalServiceImpl implements RentalService {
     private void checkIfUserExist(Long id, UserDetails userDetails) {
         User user = userRepository.findById(id).orElseThrow(
                 () -> new EntityNotFoundException("User with id: "
-                + id + " doesn't exist"));
+                        + id + " doesn't exist"));
         if (!user.getEmail().equals(userDetails.getUsername())) {
             throw new AuthenticationException("Email in token doesn't match user with id: " + id);
         }
