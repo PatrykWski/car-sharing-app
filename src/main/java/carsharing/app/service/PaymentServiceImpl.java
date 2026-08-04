@@ -30,6 +30,8 @@ import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -40,7 +42,8 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
-    private final PaymentMethod paymentMethod;
+    private final List<PaymentMethod> paymentMethodsList;
+    private Map<PaymentType, PaymentMethod> paymentMethods;
     private final PaymentRepository paymentRepository;
     private final PaymentMapper paymentMapper;
     private final RentalRepository rentalRepository;
@@ -57,23 +60,25 @@ public class PaymentServiceImpl implements PaymentService {
     private String chatId;
 
     @PostConstruct
-    public void initStripe() {
+    public void initStripeAndMethods() {
         Stripe.apiKey = stripeSecretKey;
+        this.paymentMethods = paymentMethodsList.stream()
+                .collect(Collectors
+                        .toMap(PaymentMethod::getSupportedType, paymentMethod -> paymentMethod));
     }
 
     @Override
     public PaymentDto createStripeSession(
             UserDetails userDetails,
             CreatePaymentRequestDto request) {
-
-        Rental rental = rentalRepository.findById(request.rentalId()).orElseThrow(
-                () -> new EntityNotFoundException("Rental with id: " + request.rentalId()
-                        + " doesn't exist"));
+        Rental rental = getRental(request.rentalId());
 
         User user = getUser(rental.getUserId());
 
         if (userDetails.getUsername().equals(user.getEmail())) {
-            BigDecimal amountToPay = paymentMethod.totalToPay(request.rentalId());
+            PaymentType paymentType = determinePaymentType(rental);
+
+            BigDecimal amountToPay = amountToPay(rental, paymentType);
 
             long amountInCents = amountToPay.multiply(BigDecimal.valueOf(100)).longValue();
 
@@ -83,7 +88,8 @@ public class PaymentServiceImpl implements PaymentService {
                 Session session = Session.create(params);
 
                 Payment payment = createPayment(
-                        request.rentalId(), amountToPay, session.getUrl(), session.getId());
+                        request.rentalId(), amountToPay, session.getUrl(), session.getId(),
+                        paymentType);
 
                 paymentRepository.save(payment);
 
@@ -204,14 +210,15 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private Payment createPayment(
-            Long rentalId, BigDecimal amountToPay, String url, String sessionId) {
+            Long rentalId, BigDecimal amountToPay,
+            String url, String sessionId, PaymentType paymentType) {
         try {
             Payment payment = new Payment();
             payment.setRentalId(rentalId);
             payment.setAmountToPay(amountToPay);
             payment.setUrl(new URL(url));
             payment.setSessionId(sessionId);
-            payment.setPaymentType(PaymentType.PAYMENT);
+            payment.setPaymentType(paymentType);
             payment.setStatusName(StatusName.PENDING);
             return payment;
         } catch (MalformedURLException ex) {
@@ -225,5 +232,23 @@ public class PaymentServiceImpl implements PaymentService {
             throw new NotificationError("Result from notificationService"
                     + " was null or empty");
         }
+    }
+
+    private BigDecimal amountToPay(Rental rental, PaymentType paymentType) {
+        return paymentMethods.get(paymentType).totalToPay(rental.getId());
+    }
+
+    private Rental getRental(Long rentalId) {
+        return rentalRepository.findById(rentalId).orElseThrow(
+                () -> new EntityNotFoundException("Rental with id: " + rentalId
+                        + " doesn't exist"));
+    }
+
+    private PaymentType determinePaymentType(Rental rental) {
+        if (rental.getActualReturnDate() != null
+                && rental.getActualReturnDate().isAfter(rental.getReturnDate())) {
+            return PaymentType.FINE;
+        }
+        return PaymentType.PAYMENT;
     }
 }
