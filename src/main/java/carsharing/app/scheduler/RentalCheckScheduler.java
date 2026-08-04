@@ -57,6 +57,7 @@ public class RentalCheckScheduler {
             sendNotification(telegramMessageRequest);
         }
     }
+
     private void sendNotification(TelegramMessageRequest telegramMessageRequest) {
         String result = notificationService.sendNotification(telegramMessageRequest);
         if (result == null || result.isEmpty()) {

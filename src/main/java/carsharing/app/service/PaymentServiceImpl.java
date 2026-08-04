@@ -44,7 +44,6 @@ import org.springframework.stereotype.Service;
 public class PaymentServiceImpl implements PaymentService {
     private final List<PaymentMethod> paymentMethodsList;
     private Map<PaymentType, PaymentMethod> paymentMethods;
-
     private final PaymentRepository paymentRepository;
     private final PaymentMapper paymentMapper;
     private final RentalRepository rentalRepository;
@@ -79,7 +78,7 @@ public class PaymentServiceImpl implements PaymentService {
         if (userDetails.getUsername().equals(user.getEmail())) {
             PaymentType paymentType = determinePaymentType(rental);
 
-            BigDecimal amountToPay = amountToPay(rental);
+            BigDecimal amountToPay = amountToPay(rental, paymentType);
 
             long amountInCents = amountToPay.multiply(BigDecimal.valueOf(100)).longValue();
 
@@ -89,7 +88,8 @@ public class PaymentServiceImpl implements PaymentService {
                 Session session = Session.create(params);
 
                 Payment payment = createPayment(
-                        request.rentalId(), amountToPay, session.getUrl(), session.getId(), paymentType);
+                        request.rentalId(), amountToPay, session.getUrl(), session.getId(),
+                        paymentType);
 
                 paymentRepository.save(payment);
 
@@ -234,11 +234,8 @@ public class PaymentServiceImpl implements PaymentService {
         }
     }
 
-    private BigDecimal amountToPay(Rental rental) {
-        if (rental.getActualReturnDate().isAfter(rental.getReturnDate())) {
-            return paymentMethods.get(PaymentType.FINE).totalToPay(rental.getId());
-        }
-        return paymentMethods.get(PaymentType.PAYMENT).totalToPay(rental.getId());
+    private BigDecimal amountToPay(Rental rental, PaymentType paymentType) {
+        return paymentMethods.get(paymentType).totalToPay(rental.getId());
     }
 
     private Rental getRental(Long rentalId) {
@@ -248,7 +245,8 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private PaymentType determinePaymentType(Rental rental) {
-        if (rental.getActualReturnDate().isAfter(rental.getReturnDate())) {
+        if (rental.getActualReturnDate() != null
+                && rental.getActualReturnDate().isAfter(rental.getReturnDate())) {
             return PaymentType.FINE;
         }
         return PaymentType.PAYMENT;
