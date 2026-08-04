@@ -7,16 +7,21 @@ import carsharing.app.exception.AuthenticationException;
 import carsharing.app.exception.EmptyInventoryException;
 import carsharing.app.exception.EntityNotFoundException;
 import carsharing.app.exception.NotificationError;
+import carsharing.app.exception.RentalNotFinished;
 import carsharing.app.mapper.RentalMapper;
 import carsharing.app.model.Car;
+import carsharing.app.model.Payment;
 import carsharing.app.model.Rental;
+import carsharing.app.model.StatusName;
 import carsharing.app.model.User;
 import carsharing.app.repository.CarRepository;
+import carsharing.app.repository.PaymentRepository;
 import carsharing.app.repository.RentalRepository;
 import carsharing.app.repository.UserRepository;
 import carsharing.app.service.interfaces.NotificationService;
 import carsharing.app.service.interfaces.RentalService;
 import java.time.LocalDate;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -32,6 +37,7 @@ public class RentalServiceImpl implements RentalService {
     private final CarRepository carRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final PaymentRepository paymentRepository;
 
     @Value("${telegram.chatId}")
     private String chatId;
@@ -39,6 +45,9 @@ public class RentalServiceImpl implements RentalService {
     @Override
     public RentalDto addNewRental(UserDetails userDetails, RentalRequestDto requestDto) {
         checkIfUserExist(requestDto.getUserId(), userDetails);
+        User user = userRepository.findByEmail(userDetails.getUsername()).get();
+
+        validateNoPendingPayments(user.getId());
 
         Car car = getCar(requestDto.getCarId());
 
@@ -111,6 +120,25 @@ public class RentalServiceImpl implements RentalService {
         if (result == null || result.isEmpty()) {
             throw new NotificationError("Result from notificationService"
                     + " was null or empty");
+        }
+    }
+
+    private void validateNoPendingPayments(Long userId) {
+        List<Rental> listOfRentals = rentalRepository.findRentalByUserId(userId);
+        List<Long> listOfRentalsIds = listOfRentals.stream()
+                .map(Rental::getId)
+                .toList();
+
+        if (listOfRentalsIds.isEmpty()) {
+            return;
+        }
+
+        List<Payment> payments = paymentRepository.findAllByRentalIdIn(listOfRentalsIds);
+
+        for(Payment p : payments) {
+            if (p.getStatusName().equals(StatusName.PENDING)) {
+                throw new RentalNotFinished("Can't rent new car before paying for previous one");
+            }
         }
     }
 }
