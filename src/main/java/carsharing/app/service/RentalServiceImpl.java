@@ -135,7 +135,7 @@ public class RentalServiceImpl implements RentalService {
 
         List<Payment> payments = paymentRepository.findAllByRentalIdIn(listOfRentalsIds);
 
-        for(Payment p : payments) {
+        for (Payment p : payments) {
             if (p.getStatusName().equals(StatusName.PENDING)) {
                 throw new RentalNotFinished("Can't rent new car before paying for previous one");
             }
