@@ -64,6 +64,16 @@ public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler
         return new ResponseEntity<>(exceptionResponse, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<Object> handleLoginException(AuthenticationException ex) {
+        ExceptionResponse exceptionResponse = new ExceptionResponse(
+                Instant.now(),
+                ex.getMessage(),
+                ex.getStatus().value()
+        );
+        return new ResponseEntity<>(exceptionResponse, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(UserExistException.class)
     public ResponseEntity<Object> handleUserExistException(UserExistException ex) {
         ExceptionResponse exceptionResponse = new ExceptionResponse(
@@ -72,5 +82,15 @@ public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler
                 ex.getStatus().value()
         );
         return new ResponseEntity<>(exceptionResponse, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(EmptyInventoryException.class)
+    public ResponseEntity<Object> handleEmptyInventoryException(EmptyInventoryException ex) {
+        ExceptionResponse exceptionResponse = new ExceptionResponse(
+                Instant.now(),
+                ex.getMessage(),
+                ex.getStatus().value()
+        );
+        return new ResponseEntity<>(exceptionResponse, HttpStatus.NOT_FOUND);
     }
 }
