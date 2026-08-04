@@ -65,7 +65,7 @@ public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler
     }
 
     @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<Object> handleLoginException(AuthenticationException ex) {
+    public ResponseEntity<Object> handleAuthenticationException(AuthenticationException ex) {
         ExceptionResponse exceptionResponse = new ExceptionResponse(
                 Instant.now(),
                 ex.getMessage(),
@@ -92,5 +92,25 @@ public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler
                 ex.getStatus().value()
         );
         return new ResponseEntity<>(exceptionResponse, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(RentalNotFinished.class)
+    public ResponseEntity<Object> handleRentalNotFinishedException(RentalNotFinished ex) {
+        ExceptionResponse exceptionResponse = new ExceptionResponse(
+                Instant.now(),
+                ex.getMessage(),
+                ex.getStatus().value()
+        );
+        return new ResponseEntity<>(exceptionResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(StripeProcessingException.class)
+    public ResponseEntity<Object> handleStripeProcessingException(StripeProcessingException ex) {
+        ExceptionResponse exceptionResponse = new ExceptionResponse(
+                Instant.now(),
+                ex.getMessage(),
+                ex.getStatus().value()
+        );
+        return new ResponseEntity<>(exceptionResponse, HttpStatus.BAD_REQUEST);
     }
 }
