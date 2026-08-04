@@ -2,8 +2,10 @@ package carsharing.app.service;
 
 import carsharing.app.dto.payment.PaymentDto;
 import carsharing.app.dto.rental.CreatePaymentRequestDto;
+import carsharing.app.dto.telegram.TelegramMessageRequest;
 import carsharing.app.exception.AuthenticationException;
 import carsharing.app.exception.EntityNotFoundException;
+import carsharing.app.exception.NotificationError;
 import carsharing.app.exception.StripeProcessingException;
 import carsharing.app.mapper.PaymentMapper;
 import carsharing.app.model.Payment;
@@ -15,6 +17,7 @@ import carsharing.app.model.User;
 import carsharing.app.repository.PaymentRepository;
 import carsharing.app.repository.RentalRepository;
 import carsharing.app.repository.UserRepository;
+import carsharing.app.service.interfaces.NotificationService;
 import carsharing.app.service.interfaces.PaymentService;
 import carsharing.app.service.payment.PaymentMethod;
 import com.stripe.Stripe;
@@ -42,12 +45,16 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentMapper paymentMapper;
     private final RentalRepository rentalRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     @Value("${stripe.sk}")
     private String stripeSecretKey;
 
     @Value("${stripe.url}")
     private String url;
+
+    @Value("${telegram.chatId}")
+    private String chatId;
 
     @PostConstruct
     public void initStripe() {
@@ -122,6 +129,13 @@ public class PaymentServiceImpl implements PaymentService {
                 Payment payment = getPayment(sessionId);
                 payment.setStatusName(StatusName.PAID);
                 paymentRepository.save(payment);
+
+                TelegramMessageRequest telegramMessageRequest = new TelegramMessageRequest(
+                        chatId,
+                        "Payment has been successfully paid"
+                );
+
+                sendNotification(telegramMessageRequest);
 
                 return paymentMapper.toDto(payment);
             }
@@ -202,6 +216,14 @@ public class PaymentServiceImpl implements PaymentService {
             return payment;
         } catch (MalformedURLException ex) {
             throw new RuntimeException(ex);
+        }
+    }
+
+    private void sendNotification(TelegramMessageRequest telegramMessageRequest) {
+        String result = notificationService.sendNotification(telegramMessageRequest);
+        if (result == null || result.isEmpty()) {
+            throw new NotificationError("Result from notificationService"
+                    + " was null or empty");
         }
     }
 }

@@ -1,4 +1,6 @@
 package carsharing.app.dto.telegram;
 
-public record TelegramMessageRequest() {
+import jakarta.validation.constraints.NotBlank;
+
+public record TelegramMessageRequest(@NotBlank String chatId, @NotBlank String text) {
 }
