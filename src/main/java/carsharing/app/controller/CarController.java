@@ -43,7 +43,8 @@ public class CarController {
     @Operation(summary = "Get all cars", description = "Get all cars sorted by brand")
     @PreAuthorize("hasAnyRole('MANAGER', 'CUSTOMER')")
     public Page<CarDto> getPageOfCars(
-            @ParameterObject @PageableDefault(size = 10, sort = "brand") Pageable pageable) {
+            @ParameterObject @PageableDefault(page = 0, size = 10, sort = "brand")
+            Pageable pageable) {
         return carService.getPageOfCars(pageable);
     }
 
