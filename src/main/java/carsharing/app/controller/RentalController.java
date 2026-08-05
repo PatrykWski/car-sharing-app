@@ -37,7 +37,7 @@ public class RentalController {
     @PreAuthorize("hasAnyRole('MANAGER', 'CUSTOMER')")
     public RentalDto addNewRental(@AuthenticationPrincipal UserDetails userDetails,
                                   @RequestBody @Valid RentalRequestDto requestDto) {
-        return rentalService.addNewRental(userDetails, requestDto);
+        return rentalService.addNewRental(userDetails.getUsername(), requestDto);
     }
 
     @GetMapping("/{userId}/all")
@@ -48,7 +48,8 @@ public class RentalController {
                                                  @RequestParam boolean isActive,
                                                  @PageableDefault(size = 10, page = 0)
                                                  Pageable pageable) {
-        return rentalService.getAllActualRentalsByUserId(userId, userDetails, isActive, pageable);
+        return rentalService.getAllActualRentalsByUserId(userId, userDetails.getUsername(),
+                isActive, pageable);
     }
 
     @GetMapping("/{id}")

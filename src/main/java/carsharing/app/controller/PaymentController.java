@@ -37,7 +37,8 @@ public class PaymentController {
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody @Valid CreatePaymentRequestDto createPaymentRequestDto) {
 
-        return paymentService.createStripeSession(userDetails, createPaymentRequestDto);
+        return paymentService.createStripeSession(userDetails.getUsername(),
+                createPaymentRequestDto);
     }
 
     @GetMapping()
@@ -49,7 +50,7 @@ public class PaymentController {
             @PageableDefault(size = 10, page = 0)
             Pageable pageable) {
 
-        return paymentService.getPayments(userDetails, userId, pageable);
+        return paymentService.getPayments(userDetails.getUsername(), userId, pageable);
     }
 
     @GetMapping("/success")

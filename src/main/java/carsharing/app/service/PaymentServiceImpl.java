@@ -36,7 +36,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -69,13 +68,13 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public PaymentDto createStripeSession(
-            UserDetails userDetails,
+            String email,
             CreatePaymentRequestDto request) {
         Rental rental = getRental(request.rentalId());
 
         User user = getUser(rental.getUserId());
 
-        if (userDetails.getUsername().equals(user.getEmail())) {
+        if (email.equals(user.getEmail())) {
             PaymentType paymentType = determinePaymentType(rental);
 
             BigDecimal amountToPay = amountToPay(rental, paymentType);
@@ -103,8 +102,8 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public Page<PaymentDto> getPayments(UserDetails userDetails, Long userId, Pageable pageable) {
-        User loggedInUser = userRepository.findByEmail(userDetails.getUsername()).orElseThrow(
+    public Page<PaymentDto> getPayments(String email, Long userId, Pageable pageable) {
+        User loggedInUser = userRepository.findByEmail(email).orElseThrow(
                 () -> new EntityNotFoundException("User not found"));
         boolean isManager = loggedInUser.getRoleName().equals(RoleName.MANAGER);
 
@@ -118,7 +117,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         User user = getUser(userId);
 
-        if (!user.getEmail().equals(userDetails.getUsername()) && !isManager) {
+        if (!user.getEmail().equals(email) && !isManager) {
             throw new AuthenticationException("Unauthorized user");
         }
         return getPaymentsByUserId(user.getId(), pageable);
