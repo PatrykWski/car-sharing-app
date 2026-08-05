@@ -37,7 +37,7 @@ public class UserController {
     @Operation(summary = "See my profile", description = "See my profile")
     @PreAuthorize("hasAnyRole('MANAGER', 'CUSTOMER')")
     public UserDto getUser(@AuthenticationPrincipal UserDetails userDetails) {
-        return userService.getUser(userDetails);
+        return userService.getUser(userDetails.getUsername());
     }
 
     @PutMapping("/me")
@@ -45,6 +45,6 @@ public class UserController {
     @PreAuthorize("hasRole('CUSTOMER')")
     public UserDto updateProfile(@AuthenticationPrincipal UserDetails userDetails,
                                  @RequestBody UserUpdateDto userUpdateDto) {
-        return userService.updateProfile(userDetails, userUpdateDto);
+        return userService.updateProfile(userDetails.getUsername(), userUpdateDto);
     }
 }

@@ -9,7 +9,6 @@ import carsharing.app.model.User;
 import carsharing.app.repository.UserRepository;
 import carsharing.app.service.interfaces.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -28,20 +27,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDto getUser(UserDetails userDetails) {
-        return userMapper.userToDto(getUserByUserDetails(userDetails));
+    public UserDto getUser(String email) {
+        return userMapper.userToDto(getUserByUserDetails(email));
     }
 
     @Override
-    public UserDto updateProfile(UserDetails userDetails, UserUpdateDto userUpdateDto) {
-        User user = getUserByUserDetails(userDetails);
+    public UserDto updateProfile(String email, UserUpdateDto userUpdateDto) {
+        User user = getUserByUserDetails(email);
         userMapper.updateUser(user, userUpdateDto);
         User savedUser = userRepository.save(user);
         return userMapper.userToDto(savedUser);
     }
 
-    private User getUserByUserDetails(UserDetails userDetails) {
-        return userRepository.findByEmail(userDetails.getUsername()).orElseThrow(
+    private User getUserByUserDetails(String email) {
+        return userRepository.findByEmail(email).orElseThrow(
                 () -> new EntityNotFoundException("Cannot find user by this email"));
     }
 }

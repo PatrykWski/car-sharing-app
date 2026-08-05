@@ -26,7 +26,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
@@ -43,9 +42,9 @@ public class RentalServiceImpl implements RentalService {
     private String chatId;
 
     @Override
-    public RentalDto addNewRental(UserDetails userDetails, RentalRequestDto requestDto) {
-        checkIfUserExist(requestDto.getUserId(), userDetails);
-        User user = userRepository.findByEmail(userDetails.getUsername()).get();
+    public RentalDto addNewRental(String email, RentalRequestDto requestDto) {
+        checkIfUserExist(requestDto.getUserId(), email);
+        User user = userRepository.findByEmail(email).get();
 
         validateNoPendingPayments(user.getId());
 
@@ -71,9 +70,9 @@ public class RentalServiceImpl implements RentalService {
     }
 
     @Override
-    public Page<RentalDto> getAllActualRentalsByUserId(Long userId, UserDetails userDetails,
+    public Page<RentalDto> getAllActualRentalsByUserId(Long userId, String email,
                                                        boolean isActive, Pageable pageable) {
-        checkIfUserExist(userId, userDetails);
+        checkIfUserExist(userId, email);
         return rentalRepository.findRentalByActualReturnDate(userId, isActive, pageable)
                 .map(rentalMapper::toDto);
     }
@@ -101,11 +100,11 @@ public class RentalServiceImpl implements RentalService {
                         + id + " doesn't exist"));
     }
 
-    private void checkIfUserExist(Long id, UserDetails userDetails) {
+    private void checkIfUserExist(Long id, String email) {
         User user = userRepository.findById(id).orElseThrow(
                 () -> new EntityNotFoundException("User with id: "
                         + id + " doesn't exist"));
-        if (!user.getEmail().equals(userDetails.getUsername())) {
+        if (!user.getEmail().equals(email)) {
             throw new AuthenticationException("Email in token doesn't match user with id: " + id);
         }
     }
