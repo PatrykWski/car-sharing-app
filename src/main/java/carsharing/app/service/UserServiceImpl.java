@@ -21,6 +21,11 @@ public class UserServiceImpl implements UserService {
     public UserDto updateUserRole(Long id, RoleName roleName) {
         User user = userRepository.findById(id).orElseThrow(
                 () -> new EntityNotFoundException("User with id: " + id + " doesn't exist"));
+
+        if (roleName == null) {
+            throw new EntityNotFoundException("Role can't be null");
+        }
+
         user.setRoleName(roleName);
         User savedUser = userRepository.save(user);
         return userMapper.userToDto(savedUser);
