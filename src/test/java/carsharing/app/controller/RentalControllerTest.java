@@ -2,8 +2,8 @@ package carsharing.app.controller;
 
 import carsharing.app.dto.rental.RentalDto;
 import carsharing.app.dto.rental.RentalRequestDto;
-import carsharing.app.security.JwtAuthenticationFilter;
 import carsharing.app.security.JwtUtil;
+import carsharing.app.security.SecurityConfig;
 import carsharing.app.service.CustomUserDetailsService;
 import carsharing.app.service.interfaces.RentalService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,11 +13,8 @@ import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -26,13 +23,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
-@WebMvcTest(
-        controllers = RentalController.class,
-        excludeFilters = @ComponentScan.Filter(
-                type = FilterType.ASSIGNABLE_TYPE,
-                classes = JwtAuthenticationFilter.class
-        )
-)
+@WebMvcTest(RentalController.class)
+@Import(SecurityConfig.class)
 public class RentalControllerTest {
     private static final Long VALID_ID = 1L;
     private static final String VALID_EMAIL = "patrykw@gmail.com";
@@ -51,17 +43,6 @@ public class RentalControllerTest {
 
     @MockitoBean
     private CustomUserDetailsService customUserDetailsService;
-
-    @Test
-    @WithMockUser(username = VALID_EMAIL, roles = "MANAGER")
-    void testSecurity() {
-
-        Authentication auth =
-                SecurityContextHolder.getContext().getAuthentication();
-
-        System.out.println(auth);
-    }
-
 
     @Test
     @WithMockUser(username = VALID_EMAIL, roles = {"MANAGER", "CUSTOMER"})

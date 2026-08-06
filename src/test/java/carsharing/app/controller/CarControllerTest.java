@@ -5,7 +5,6 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import org.springframework.context.annotation.Import;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -71,7 +70,6 @@ public class CarControllerTest {
 
         //when & then
         MvcResult result = mockMvc.perform(post("/cars")
-                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(carRequest)))
                 .andExpect(status().isCreated())
@@ -91,7 +89,6 @@ public class CarControllerTest {
 
         //when & then
         mockMvc.perform(post("/cars")
-                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(carRequest)))
                 .andExpect(status().isForbidden());
@@ -105,14 +102,13 @@ public class CarControllerTest {
 
         //when & then
         mockMvc.perform(post("/cars")
-                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(carRequest)))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
-    @WithMockUser(username = "customer", roles = "CUSTOMER")
+    @WithMockUser(username = "user", roles = {"CUSTOMER", "MANAGER"})
     void getPageOfCars_CarsExist_ReturnsStatusOk() throws Exception {
         //given
         Pageable pageable = PageRequest.of(0, 10, Sort.by("brand"));
@@ -147,7 +143,7 @@ public class CarControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "customer", roles = "CUSTOMER")
+    @WithMockUser(username = "user", roles = {"CUSTOMER", "MANAGER"})
     void getCarById_ValidId_ReturnsStatusOk() throws Exception {
         //given
         CarDto expected = getCarDto();
@@ -185,11 +181,24 @@ public class CarControllerTest {
 
         //when & then
         mockMvc.perform(put("/cars/{id}", VALID_ID)
-                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateCarRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(expected.getId()));
+    }
+    @Test
+    @WithMockUser(username = "customer", roles = "CUSTOMER")
+    void updateCarById_ValidRequestButBadRole_ReturnsForbidden() throws Exception {
+        //given
+        UpdateCarRequest updateCarRequest = new UpdateCarRequest();
+        updateCarRequest.setDailyFee(new BigDecimal(30));
+        updateCarRequest.setInventory(10);
+
+        //when & then
+        mockMvc.perform(put("/cars/{id}", VALID_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateCarRequest)))
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -202,7 +211,6 @@ public class CarControllerTest {
 
         //when & then
         mockMvc.perform(put("/cars/{id}", VALID_ID)
-                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateCarRequest)))
                 .andExpect(status().isBadRequest());
@@ -220,7 +228,6 @@ public class CarControllerTest {
 
         //when & then
         mockMvc.perform(put("/cars/{id}", INVALID_ID)
-                        .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateCarRequest)))
                 .andExpect(status().isNotFound());
@@ -234,9 +241,17 @@ public class CarControllerTest {
 
         //when & then
         mockMvc.perform(delete("/cars/{id}", VALID_ID)
-                        .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @WithMockUser(username = "customer", roles = "CUSTOMER")
+    void deleteCar_ValidIdButBadRole_ReturnsForbidden() throws Exception {
+        //given & when & then
+        mockMvc.perform(delete("/cars/{id}", VALID_ID)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -248,7 +263,6 @@ public class CarControllerTest {
 
         //when & then
         mockMvc.perform(delete("/cars/{id}", INVALID_ID)
-                        .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
