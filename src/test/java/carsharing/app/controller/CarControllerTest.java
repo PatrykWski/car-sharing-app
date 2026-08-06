@@ -1,8 +1,11 @@
 package carsharing.app.controller;
 
+import carsharing.app.security.SecurityConfig;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
+import org.springframework.context.annotation.Import;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -23,7 +26,7 @@ import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -34,9 +37,10 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(CarController.class)
+@Import(SecurityConfig.class)
 public class CarControllerTest {
 
     private static final Long VALID_ID = 1L;
@@ -67,6 +71,7 @@ public class CarControllerTest {
 
         //when & then
         MvcResult result = mockMvc.perform(post("/cars")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(carRequest)))
                 .andExpect(status().isCreated())
@@ -79,13 +84,28 @@ public class CarControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "manager", roles = "MANAGER")
-    void addNewCar_InvalidCarRequest_ReturnsBadRequest() throws Exception {
+    @WithMockUser(username = "customer", roles = "CUSTOMER")
+    void addNewCar_ValidCarRequestButWrongRole_ReturnsStatusForbidden() throws Exception {
         //given
-        CarRequest carRequest = null;
+        CarRequest carRequest = getCarRequest();
 
         //when & then
         mockMvc.perform(post("/cars")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(carRequest)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = "manager", roles = "MANAGER")
+    void addNewCar_InvalidCarRequest_ReturnsBadRequest() throws Exception {
+        //given
+        CarRequest carRequest = new CarRequest();
+
+        //when & then
+        mockMvc.perform(post("/cars")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(carRequest)))
                 .andExpect(status().isBadRequest());
@@ -165,6 +185,7 @@ public class CarControllerTest {
 
         //when & then
         mockMvc.perform(put("/cars/{id}", VALID_ID)
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateCarRequest)))
                 .andExpect(status().isOk())
@@ -181,6 +202,7 @@ public class CarControllerTest {
 
         //when & then
         mockMvc.perform(put("/cars/{id}", VALID_ID)
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateCarRequest)))
                 .andExpect(status().isBadRequest());
@@ -198,6 +220,7 @@ public class CarControllerTest {
 
         //when & then
         mockMvc.perform(put("/cars/{id}", INVALID_ID)
+                        .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateCarRequest)))
                 .andExpect(status().isNotFound());
@@ -211,6 +234,7 @@ public class CarControllerTest {
 
         //when & then
         mockMvc.perform(delete("/cars/{id}", VALID_ID)
+                        .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
     }
@@ -224,6 +248,7 @@ public class CarControllerTest {
 
         //when & then
         mockMvc.perform(delete("/cars/{id}", INVALID_ID)
+                        .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
@@ -234,6 +259,7 @@ public class CarControllerTest {
         carRequest.setInventory(10);
         carRequest.setModel("Ibiza");
         carRequest.setTypeName(TypeName.HATCHBACK);
+        carRequest.setDailyFee(new BigDecimal(20));
         return carRequest;
     }
 
