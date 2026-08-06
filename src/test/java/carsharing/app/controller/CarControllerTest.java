@@ -1,10 +1,8 @@
 package carsharing.app.controller;
 
-import carsharing.app.security.SecurityConfig;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
-import org.springframework.context.annotation.Import;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -18,14 +16,17 @@ import carsharing.app.dto.car.UpdateCarRequest;
 import carsharing.app.exception.EntityNotFoundException;
 import carsharing.app.model.TypeName;
 import carsharing.app.security.JwtUtil;
+import carsharing.app.security.SecurityConfig;
 import carsharing.app.service.CustomUserDetailsService;
 import carsharing.app.service.interfaces.CarService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -36,7 +37,6 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(CarController.class)
 @Import(SecurityConfig.class)
@@ -186,6 +186,7 @@ public class CarControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(expected.getId()));
     }
+
     @Test
     @WithMockUser(username = "customer", roles = "CUSTOMER")
     void updateCarById_ValidRequestButBadRole_ReturnsForbidden() throws Exception {

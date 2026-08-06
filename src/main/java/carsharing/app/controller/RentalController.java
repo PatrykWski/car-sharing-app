@@ -12,7 +12,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,9 +35,9 @@ public class RentalController {
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Add new rental", description = "Add new rental")
     @PreAuthorize("hasAnyRole('MANAGER', 'CUSTOMER')")
-    public RentalDto addNewRental(Authentication authentication,
+    public RentalDto addNewRental(@AuthenticationPrincipal UserDetails userDetails,
                                   @RequestBody @Valid RentalRequestDto requestDto) {
-        return rentalService.addNewRental(authentication.getName(), requestDto);
+        return rentalService.addNewRental(userDetails.getUsername(), requestDto);
     }
 
     @GetMapping("/{userId}/all")
