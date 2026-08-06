@@ -16,14 +16,17 @@ import carsharing.app.dto.car.UpdateCarRequest;
 import carsharing.app.exception.EntityNotFoundException;
 import carsharing.app.model.TypeName;
 import carsharing.app.security.JwtUtil;
+import carsharing.app.security.SecurityConfig;
 import carsharing.app.service.CustomUserDetailsService;
 import carsharing.app.service.interfaces.CarService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -34,9 +37,9 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import tools.jackson.databind.ObjectMapper;
 
 @WebMvcTest(CarController.class)
+@Import(SecurityConfig.class)
 public class CarControllerTest {
 
     private static final Long VALID_ID = 1L;
@@ -79,10 +82,23 @@ public class CarControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "customer", roles = "CUSTOMER")
+    void addNewCar_ValidCarRequestButWrongRole_ReturnsStatusForbidden() throws Exception {
+        //given
+        CarRequest carRequest = getCarRequest();
+
+        //when & then
+        mockMvc.perform(post("/cars")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(carRequest)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     @WithMockUser(username = "manager", roles = "MANAGER")
     void addNewCar_InvalidCarRequest_ReturnsBadRequest() throws Exception {
         //given
-        CarRequest carRequest = null;
+        CarRequest carRequest = new CarRequest();
 
         //when & then
         mockMvc.perform(post("/cars")
@@ -92,7 +108,7 @@ public class CarControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "customer", roles = "CUSTOMER")
+    @WithMockUser(username = "user", roles = {"CUSTOMER", "MANAGER"})
     void getPageOfCars_CarsExist_ReturnsStatusOk() throws Exception {
         //given
         Pageable pageable = PageRequest.of(0, 10, Sort.by("brand"));
@@ -127,7 +143,7 @@ public class CarControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "customer", roles = "CUSTOMER")
+    @WithMockUser(username = "user", roles = {"CUSTOMER", "MANAGER"})
     void getCarById_ValidId_ReturnsStatusOk() throws Exception {
         //given
         CarDto expected = getCarDto();
@@ -169,6 +185,21 @@ public class CarControllerTest {
                         .content(objectMapper.writeValueAsString(updateCarRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(expected.getId()));
+    }
+
+    @Test
+    @WithMockUser(username = "customer", roles = "CUSTOMER")
+    void updateCarById_ValidRequestButBadRole_ReturnsForbidden() throws Exception {
+        //given
+        UpdateCarRequest updateCarRequest = new UpdateCarRequest();
+        updateCarRequest.setDailyFee(new BigDecimal(30));
+        updateCarRequest.setInventory(10);
+
+        //when & then
+        mockMvc.perform(put("/cars/{id}", VALID_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateCarRequest)))
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -216,6 +247,15 @@ public class CarControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "customer", roles = "CUSTOMER")
+    void deleteCar_ValidIdButBadRole_ReturnsForbidden() throws Exception {
+        //given & when & then
+        mockMvc.perform(delete("/cars/{id}", VALID_ID)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     @WithMockUser(username = "manager", roles = "MANAGER")
     void deleteCar_InvalidId_ReturnsNotFound() throws Exception {
         //given
@@ -234,6 +274,7 @@ public class CarControllerTest {
         carRequest.setInventory(10);
         carRequest.setModel("Ibiza");
         carRequest.setTypeName(TypeName.HATCHBACK);
+        carRequest.setDailyFee(new BigDecimal(20));
         return carRequest;
     }
 
