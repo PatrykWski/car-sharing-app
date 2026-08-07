@@ -6,6 +6,7 @@ import carsharing.app.model.RoleName;
 import carsharing.app.service.interfaces.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -42,9 +43,9 @@ public class UserController {
 
     @PutMapping("/me")
     @Operation(summary = "Update my profile", description = "Update my profile")
-    @PreAuthorize("hasRole('CUSTOMER')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'CUSTOMER')")
     public UserDto updateProfile(@AuthenticationPrincipal UserDetails userDetails,
-                                 @RequestBody UserUpdateDto userUpdateDto) {
+                                 @Valid @RequestBody UserUpdateDto userUpdateDto) {
         return userService.updateProfile(userDetails.getUsername(), userUpdateDto);
     }
 }
