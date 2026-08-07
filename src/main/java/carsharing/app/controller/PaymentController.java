@@ -57,13 +57,11 @@ public class PaymentController {
     }
 
     @GetMapping("/success")
-    @PreAuthorize("hasAnyRole('MANAGER', 'CUSTOMER')")
     public PaymentDto verifyPaymentSuccess(@RequestParam @NotBlank String sessionId) {
         return paymentService.verifyPaymentSuccess(sessionId);
     }
 
     @GetMapping("/cancel")
-    @PreAuthorize("hasAnyRole('MANAGER', 'CUSTOMER')")
     public PaymentDto cancelPayment(@RequestParam @NotBlank String sessionId) {
         return paymentService.cancelPayment(sessionId);
     }
