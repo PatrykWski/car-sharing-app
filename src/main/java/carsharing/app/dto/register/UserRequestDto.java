@@ -2,8 +2,8 @@ package carsharing.app.dto.register;
 
 import carsharing.app.annotation.FieldMatch;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
@@ -17,9 +17,9 @@ public class UserRequestDto {
     @NotBlank
     private String lastName;
     @NotBlank
-    @Min(value = 8)
+    @Size(min = 8)
     private String password;
     @NotBlank
-    @Min(value = 8)
+    @Size(min = 8)
     private String repeatPassword;
 }
