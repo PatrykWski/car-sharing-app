@@ -38,7 +38,7 @@ public class RentalServiceImpl implements RentalService {
     private final NotificationService notificationService;
     private final PaymentRepository paymentRepository;
 
-    @Value("${telegram.chatId}")
+    @Value("${TELEGRAM_CHAT_ID}")
     private String chatId;
 
     @Override

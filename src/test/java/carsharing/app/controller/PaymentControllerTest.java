@@ -121,7 +121,6 @@ public class PaymentControllerTest {
     }
 
     @Test
-    @WithMockUser(username = VALID_EMAIL, roles = "MANAGER")
     void verifyPaymentSuccess_ValidSessionId_ReturnsStatusOk() throws Exception {
         //given
         PaymentDto expected = getPaymentDto();
@@ -141,7 +140,6 @@ public class PaymentControllerTest {
     }
 
     @Test
-    @WithMockUser(username = VALID_EMAIL, roles = "MANAGER")
     void verifyPaymentSuccess_InvalidSessionId_ReturnsBadRequest() throws Exception {
         //given & when & then
         mockMvc.perform(get("/payments/success")
@@ -151,7 +149,6 @@ public class PaymentControllerTest {
     }
 
     @Test
-    @WithMockUser(username = VALID_EMAIL, roles = "MANAGER")
     void cancelPayment_ValidSessionId_ReturnsStatusOk() throws Exception {
         //given
         PaymentDto expected = getPaymentDto();
@@ -172,7 +169,6 @@ public class PaymentControllerTest {
     }
 
     @Test
-    @WithMockUser(username = VALID_EMAIL, roles = "MANAGER")
     void cancelPayment_InvalidSessionId_ReturnsBadRequest() throws Exception {
         //given & when & then
         mockMvc.perform(get("/payments/cancel")

@@ -22,7 +22,7 @@ public class RentalCheckScheduler {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
 
-    @Value("${telegram.chatId}")
+    @Value("${TELEGRAM_CHAT_ID}")
     private String chatId;
 
     @Scheduled(cron = "0 0 9 * * *")

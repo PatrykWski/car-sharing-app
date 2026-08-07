@@ -55,7 +55,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Value("${stripe.url}")
     private String url;
 
-    @Value("${telegram.chatId}")
+    @Value("${TELEGRAM_CHAT_ID}")
     private String chatId;
 
     @PostConstruct
@@ -185,8 +185,8 @@ public class PaymentServiceImpl implements PaymentService {
     private SessionCreateParams getParams(long amountInCents, Long rentalId) {
         return SessionCreateParams.builder()
                 .setMode(Mode.PAYMENT)
-                .setSuccessUrl(url + "/payments/success")
-                .setCancelUrl(url + "/payments/cancel")
+                .setSuccessUrl(url + "/payments/success?sessionId={CHECKOUT_SESSION_ID}")
+                .setCancelUrl(url + "/payments/cancel?sessionId={CHECKOUT_SESSION_ID}")
                 .addLineItem(
                         SessionCreateParams.LineItem.builder()
                                 .setQuantity(1L)
