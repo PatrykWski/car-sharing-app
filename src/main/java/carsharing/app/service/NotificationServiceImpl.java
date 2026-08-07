@@ -12,12 +12,12 @@ import org.springframework.web.client.RestClient;
 public class NotificationServiceImpl implements NotificationService {
     private final RestClient restClient = RestClient.create();
 
-    @Value("${telegram.token}")
+    @Value("${TELEGRAM_TOKEN}")
     private String token;
 
     @Override
     public String sendNotification(TelegramMessageRequest telegramMessageRequest) {
-        String url = "https://api.telegram.org/bot/" + token + "/sendMessage";
+        String url = "https://api.telegram.org/bot" + token + "/sendMessage";
 
         try {
             return restClient.post()
