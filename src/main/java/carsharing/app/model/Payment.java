@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.net.URL;
+import java.util.Objects;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -35,4 +36,18 @@ public class Payment {
     private String sessionId;
     @Column(nullable = false)
     private BigDecimal amountToPay;
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Payment payment = (Payment) o;
+        return Objects.equals(id, payment.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
 }

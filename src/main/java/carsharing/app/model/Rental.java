@@ -1,5 +1,6 @@
 package carsharing.app.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -18,9 +19,13 @@ public class Rental {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(nullable = false)
     private Long carId;
+    @Column(nullable = false)
     private Long userId;
+    @Column(nullable = false)
     private LocalDate rentalDate;
+    @Column(nullable = false)
     private LocalDate returnDate;
     private LocalDate actualReturnDate;
 
