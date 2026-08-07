@@ -37,6 +37,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -67,6 +68,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @Transactional
     public PaymentDto createStripeSession(
             String email,
             CreatePaymentRequestDto request) {
@@ -102,6 +104,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<PaymentDto> getPayments(String email, Long userId, Pageable pageable) {
         User loggedInUser = userRepository.findByEmail(email).orElseThrow(
                 () -> new EntityNotFoundException("User not found"));
@@ -124,6 +127,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @Transactional
     public PaymentDto verifyPaymentSuccess(String sessionId) {
         try {
             Session session = Session.retrieve(sessionId);
@@ -151,6 +155,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @Transactional
     public PaymentDto cancelPayment(String sessionId) {
         if (sessionId != null) {
             Payment payment = getPayment(sessionId);

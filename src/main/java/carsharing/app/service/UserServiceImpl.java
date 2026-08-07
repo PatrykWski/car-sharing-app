@@ -10,6 +10,7 @@ import carsharing.app.repository.UserRepository;
 import carsharing.app.service.interfaces.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +19,7 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
 
     @Override
+    @Transactional
     public UserDto updateUserRole(Long id, RoleName roleName) {
         User user = userRepository.findById(id).orElseThrow(
                 () -> new EntityNotFoundException("User with id: " + id + " doesn't exist"));
@@ -32,11 +34,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserDto getUser(String email) {
         return userMapper.userToDto(getUserByUserDetails(email));
     }
 
     @Override
+    @Transactional
     public UserDto updateProfile(String email, UserUpdateDto userUpdateDto) {
         User user = getUserByUserDetails(email);
         userMapper.updateUser(user, userUpdateDto);

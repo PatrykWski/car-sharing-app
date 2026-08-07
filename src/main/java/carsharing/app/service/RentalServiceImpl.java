@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Service
@@ -42,6 +43,7 @@ public class RentalServiceImpl implements RentalService {
     private String chatId;
 
     @Override
+    @Transactional
     public RentalDto addNewRental(String email, RentalRequestDto requestDto) {
         checkIfUserExist(requestDto.getUserId(), email);
         User user = userRepository.findByEmail(email).get();
@@ -70,6 +72,7 @@ public class RentalServiceImpl implements RentalService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<RentalDto> getAllActualRentalsByUserId(Long userId, String email,
                                                        boolean isActive, Pageable pageable) {
         checkIfUserExist(userId, email);
@@ -78,12 +81,14 @@ public class RentalServiceImpl implements RentalService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public RentalDto getSpecificRentalById(Long id) {
         Rental rental = getRentalById(id);
         return rentalMapper.toDto(rental);
     }
 
     @Override
+    @Transactional
     public RentalDto setActualReturnDate(Long id) {
         Rental rental = getRentalById(id);
         rental.setActualReturnDate(LocalDate.now());
