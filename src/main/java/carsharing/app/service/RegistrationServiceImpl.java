@@ -11,6 +11,7 @@ import carsharing.app.service.interfaces.RegistrationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +21,7 @@ public class RegistrationServiceImpl implements RegistrationService {
     private final UserRegistrationMapper userMapper;
 
     @Override
+    @Transactional
     public UserResponseDto register(UserRequestDto userRequestDto) {
         if (userRepository.findByEmail(userRequestDto.getEmail()).isPresent()) {
             throw new UserExistException("User with this email already exist");
