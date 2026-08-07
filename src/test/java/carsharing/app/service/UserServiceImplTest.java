@@ -140,7 +140,7 @@ public class UserServiceImplTest {
         return user;
     }
 
-    private UserDto getUserDto(){
+    private UserDto getUserDto() {
         UserDto userDto = new UserDto();
         userDto.setId(VALID_ID);
         userDto.setLastName("Kowalski");
