@@ -44,6 +44,7 @@ public class FeePaymentTest {
         Assertions.assertEquals(BigDecimal.valueOf(180.0), actual);
 
     }
+
     private Rental getRental() {
         Rental rental = new Rental();
         rental.setCarId(VALID_ID);
