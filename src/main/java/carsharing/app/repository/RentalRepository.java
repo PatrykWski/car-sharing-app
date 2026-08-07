@@ -13,7 +13,7 @@ import org.springframework.stereotype.Repository;
 public interface RentalRepository extends JpaRepository<Rental, Long> {
 
     @Query("SELECT r FROM Rental r "
-            + "WHERE r.user.id = :id AND "
+            + "WHERE r.userId = :id AND "
             + "((:isActive = true AND r.actualReturnDate IS NULL) "
             + "OR (:isActive = false AND r.actualReturnDate IS NOT NULL))")
     Page<Rental> findRentalByActualReturnDate(@Param("id") Long id,
