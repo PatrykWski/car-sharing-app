@@ -24,7 +24,11 @@ This application is a backend implementation of an e-commerce car sharing, desig
 * Validation: The application checks input data (for example, correct email format or non-empty fields) to prevent bad requests.
 * Global Exception Handling: Errors are handled globally and return clear JSON messages.
 * Testing: The project includes unit tests for controllers, services and repositories.
+
+## Test percentage:
+
 ![Test percentage](images/TestPercentage.png)
+
 ## Getting Started
 
 ### Dependencies
@@ -226,6 +230,7 @@ docker compose down
 mvn clean spring-boot:run
 ```
 * Open Swagger UI to test the API:
+
 ![Swagger UI](images/SwaggerUI.png)
 ```
 http://localhost:8080/swagger-ui/index.html
