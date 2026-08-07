@@ -1,5 +1,6 @@
 package carsharing.app.exception;
 
+import jakarta.validation.ConstraintViolationException;
 import java.time.Instant;
 import java.util.ArrayList;
 import org.jspecify.annotations.Nullable;
@@ -33,6 +34,18 @@ public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler
                         .map(ObjectError::getDefaultMessage).toList()));
 
         return new ResponseEntity<>(exceptionResponse, status);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<Object> handleConstraintViolationException(
+            ConstraintViolationException ex) {
+
+        ExceptionResponse exceptionResponse = new ExceptionResponse(
+                Instant.now(),
+                "Validation failed" + ex.getMessage(),
+                HttpStatus.BAD_REQUEST.value()
+        );
+        return new ResponseEntity<>(exceptionResponse, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(Exception.class)
