@@ -35,7 +35,6 @@ public class RegistrationServiceImplTest {
     @InjectMocks
     private RegistrationServiceImpl registrationService;
 
-
     @Test
     void register_ValidRequest_ReturnsDto() {
         //given
@@ -55,7 +54,6 @@ public class RegistrationServiceImplTest {
         Assertions.assertEquals(expected, actual);
     }
 
-
     @Test
     void register_UserAlreadyExists_ThrowUserExistException() {
         //given
@@ -68,7 +66,6 @@ public class RegistrationServiceImplTest {
         Assertions.assertThrows(UserExistException.class,
                 () -> registrationService.register(userRequestDto));
     }
-
 
     private User getUser() {
         User user = new User();
