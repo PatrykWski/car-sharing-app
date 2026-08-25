@@ -81,7 +81,6 @@ public class RentalControllerTest {
         RentalRequestDto requestDto = new RentalRequestDto();
         requestDto.setReturnDate(null);
         requestDto.setRentalDate(null);
-        requestDto.setUserId(-2L);
         requestDto.setCarId(-3L);
 
         //when & then
@@ -217,7 +216,6 @@ public class RentalControllerTest {
 
     private RentalRequestDto getRentalRequest() {
         RentalRequestDto requestDto = new RentalRequestDto();
-        requestDto.setUserId(VALID_ID);
         requestDto.setCarId(VALID_ID);
         requestDto.setRentalDate(LocalDate.now());
         requestDto.setReturnDate(LocalDate.now().plusDays(5));

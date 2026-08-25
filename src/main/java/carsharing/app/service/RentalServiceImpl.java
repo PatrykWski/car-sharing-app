@@ -45,7 +45,7 @@ public class RentalServiceImpl implements RentalService {
     @Override
     @Transactional
     public RentalDto addNewRental(String email, RentalRequestDto requestDto) {
-        checkIfUserExist(requestDto.getUserId(), email);
+        checkIfUserExist(email);
         User user = userRepository.findByEmail(email).get();
 
         validateNoPendingPayments(user.getId());
@@ -105,12 +105,16 @@ public class RentalServiceImpl implements RentalService {
                         + id + " doesn't exist"));
     }
 
+    private void checkIfUserExist(String email) {
+        userRepository.findByEmail(email).orElseThrow(
+                () -> new EntityNotFoundException("User does not exist"));
+    }
+
     private void checkIfUserExist(Long id, String email) {
         User user = userRepository.findById(id).orElseThrow(
-                () -> new EntityNotFoundException("User with id: "
-                        + id + " doesn't exist"));
+                () -> new EntityNotFoundException("User does not exist"));
         if (!user.getEmail().equals(email)) {
-            throw new AuthenticationException("Email in token doesn't match user with id: " + id);
+            throw new AuthenticationException("User with id: " + id + " doesn't exist");
         }
     }
 
