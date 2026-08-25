@@ -287,11 +287,7 @@ public class RentalServiceImplTest {
     void setActualReturnDate_RentalExist_ReturnsRentalDto() {
         //given
         Rental rental = getRental();
-        rental.setActualReturnDate(LocalDate.now());
-
         RentalDto expected = getRentalDto();
-        expected.setActualReturnDate(LocalDate.now());
-
         Car car = getCar();
 
         when(rentalRepository.findById(VALID_ID)).thenReturn(Optional.of(rental));
@@ -315,6 +311,18 @@ public class RentalServiceImplTest {
         //when & then
         Assertions.assertThrows(EntityNotFoundException.class,
                 () -> rentalService.setActualReturnDate(INVALID_ID));
+    }
+
+    @Test
+    void setActualReturnDate_RentalActualReturnDateIsNotNull_ThrowsEntityNotFoundException() {
+        //given
+        Rental rental = getRental();
+        rental.setActualReturnDate(LocalDate.now());
+        when(rentalRepository.findById(VALID_ID)).thenReturn(Optional.of(rental));
+
+        //when & then
+        Assertions.assertThrows(EntityNotFoundException.class,
+                () -> rentalService.setActualReturnDate(VALID_ID));
     }
 
     @Test

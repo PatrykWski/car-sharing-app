@@ -103,12 +103,15 @@ public class RentalServiceImpl implements RentalService {
     @Transactional
     public RentalDto setActualReturnDate(Long id) {
         Rental rental = getRentalById(id);
-        rental.setActualReturnDate(LocalDate.now());
-        Car car = getCar(rental.getCarId());
-        car.setInventory(car.getInventory() + 1);
-        carRepository.save(car);
-        Rental savedRental = rentalRepository.save(rental);
-        return rentalMapper.toDto(savedRental);
+        if (rental.getActualReturnDate() == null) {
+            rental.setActualReturnDate(LocalDate.now());
+            Car car = getCar(rental.getCarId());
+            car.setInventory(car.getInventory() + 1);
+            carRepository.save(car);
+            Rental savedRental = rentalRepository.save(rental);
+            return rentalMapper.toDto(savedRental);
+        }
+        throw new EntityNotFoundException("Rental with id: " + id + " is already returned");
     }
 
     private Car getCar(Long id) {
