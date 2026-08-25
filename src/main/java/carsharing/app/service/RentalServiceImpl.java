@@ -64,7 +64,7 @@ public class RentalServiceImpl implements RentalService {
 
             sendNotification(telegramMessageRequest);
 
-            return rentalMapper.toDto(savedRental);
+            return rentalMapper.toDto(savedRental, car);
         }
         throw new EmptyInventoryException("There are no more cars available with id: "
                 + car.getId() + " in the shop, choose another one");
@@ -76,11 +76,12 @@ public class RentalServiceImpl implements RentalService {
                                                        boolean isActive, Pageable pageable) {
         User user = checkIfUserExist(email);
         if (user.getRoleName().equals(RoleName.MANAGER)) {
-            return rentalRepository.findRentalByActualReturnDate(userId, isActive, pageable)
-                    .map(rentalMapper::toDto);
+            return rentalRepository.findRentalByActualReturnDate(
+                            userId, isActive, pageable)
+                    .map(rental -> rentalMapper.toDto(rental, getCar(rental.getCarId())));
         }
         return rentalRepository.findRentalByActualReturnDate(user.getId(), isActive, pageable)
-                .map(rentalMapper::toDto);
+                .map(rental -> rentalMapper.toDto(rental, getCar(rental.getCarId())));
     }
 
     @Override
@@ -88,12 +89,13 @@ public class RentalServiceImpl implements RentalService {
     public RentalDto getSpecificRentalById(Long id, String email) {
         User user = checkIfUserExist(email);
         Rental rental = getRentalById(id);
+        Car car = getCar(rental.getCarId());
         if (user.getRoleName().equals(RoleName.MANAGER)) {
-            return rentalMapper.toDto(rental);
+            return rentalMapper.toDto(rental, car);
         }
 
         if (rental.getUserId().equals(user.getId())) {
-            return rentalMapper.toDto(rental);
+            return rentalMapper.toDto(rental, car);
         }
         throw new EntityNotFoundException("Rental with id: " + id + " doesn't exist");
         // Entity Not Found so outsider doesn't know if rental actually exist or not
@@ -109,7 +111,7 @@ public class RentalServiceImpl implements RentalService {
             car.setInventory(car.getInventory() + 1);
             carRepository.save(car);
             Rental savedRental = rentalRepository.save(rental);
-            return rentalMapper.toDto(savedRental);
+            return rentalMapper.toDto(savedRental, car);
         }
         throw new EntityNotFoundException("Rental with id: " + id + " is already returned");
     }

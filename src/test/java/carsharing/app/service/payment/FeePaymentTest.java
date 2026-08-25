@@ -41,14 +41,32 @@ public class FeePaymentTest {
         BigDecimal actual = feePayment.totalToPay(VALID_ID);
 
         //then
-        Assertions.assertEquals(BigDecimal.valueOf(180.0), actual);
+        Assertions.assertEquals(BigDecimal.valueOf(400.0), actual);
+    }
 
+    @Test
+    void totalToPay_ValidRentalIdButNotLate_ReturnsTotalWithoutFine() {
+        //given
+        Rental rental = getRental();
+        rental.setActualReturnDate(LocalDate.now().plusDays(5));
+        Car car = getCar();
+
+        when(rentalRepository.findById(VALID_ID)).thenReturn(Optional.of(rental));
+        when(carRepository.findById(VALID_ID)).thenReturn(Optional.of(car));
+
+        FeePayment feePayment = new FeePayment(rentalRepository, carRepository);
+
+        //when
+        BigDecimal actual = feePayment.totalToPay(VALID_ID);
+
+        //then
+        Assertions.assertEquals(BigDecimal.valueOf(100), actual);
     }
 
     private Rental getRental() {
         Rental rental = new Rental();
         rental.setCarId(VALID_ID);
-        rental.setActualReturnDate(LocalDate.now().plusDays(4));
+        rental.setActualReturnDate(LocalDate.now().plusDays(10));
         rental.setRentalDate(LocalDate.now());
         rental.setReturnDate(LocalDate.now().plusDays(5));
         rental.setId(VALID_ID);

@@ -38,6 +38,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
 @RequiredArgsConstructor
@@ -50,10 +51,10 @@ public class PaymentServiceImpl implements PaymentService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
 
-    @Value("${stripe.sk}")
+    @Value("${STRIPE_SECRET_KEY}")
     private String stripeSecretKey;
 
-    @Value("${stripe.url}")
+    @Value("${STRIPE_URL}")
     private String url;
 
     @Value("${TELEGRAM_CHAT_ID}")
@@ -77,9 +78,8 @@ public class PaymentServiceImpl implements PaymentService {
         User user = getUser(rental.getUserId());
 
         if (email.equals(user.getEmail())) {
-            PaymentType paymentType = determinePaymentType(rental);
 
-            BigDecimal amountToPay = amountToPay(rental, paymentType);
+            BigDecimal amountToPay = amountToPay(rental, request.type());
 
             long amountInCents = amountToPay.multiply(BigDecimal.valueOf(100)).longValue();
 
@@ -90,7 +90,7 @@ public class PaymentServiceImpl implements PaymentService {
 
                 Payment payment = createPayment(
                         request.rentalId(), amountToPay, session.getUrl(), session.getId(),
-                        paymentType);
+                        request.type());
 
                 paymentRepository.save(payment);
 
@@ -159,8 +159,6 @@ public class PaymentServiceImpl implements PaymentService {
     public PaymentDto cancelPayment(String sessionId) {
         if (sessionId != null) {
             Payment payment = getPayment(sessionId);
-            payment.setStatusName(StatusName.CANCELED);
-            paymentRepository.save(payment);
             return paymentMapper.toDto(payment);
         }
         throw new EntityNotFoundException("Payment with this session id doesn't exist");
@@ -190,8 +188,8 @@ public class PaymentServiceImpl implements PaymentService {
     private SessionCreateParams getParams(long amountInCents, Long rentalId) {
         return SessionCreateParams.builder()
                 .setMode(Mode.PAYMENT)
-                .setSuccessUrl(url + "/payments/success?sessionId={CHECKOUT_SESSION_ID}")
-                .setCancelUrl(url + "/payments/cancel?sessionId={CHECKOUT_SESSION_ID}")
+                .setSuccessUrl(createUrl("success/"))
+                .setCancelUrl(createUrl("cancel/"))
                 .addLineItem(
                         SessionCreateParams.LineItem.builder()
                                 .setQuantity(1L)
@@ -248,11 +246,11 @@ public class PaymentServiceImpl implements PaymentService {
                         + " doesn't exist"));
     }
 
-    private PaymentType determinePaymentType(Rental rental) {
-        if (rental.getActualReturnDate() != null
-                && rental.getActualReturnDate().isAfter(rental.getReturnDate())) {
-            return PaymentType.FINE;
-        }
-        return PaymentType.PAYMENT;
+    private String createUrl(String type) {
+        return UriComponentsBuilder.fromUriString(url)
+                .path(type)
+                .queryParam("session_id", "{CHECKOUT_SESSION_ID}")
+                .build()
+                .toUriString();
     }
 }
