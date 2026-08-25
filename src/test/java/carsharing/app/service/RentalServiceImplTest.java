@@ -95,7 +95,7 @@ public class RentalServiceImplTest {
         when(carRepository.save(car)).thenReturn(minusQuantity);
         when(rentalRepository.save(rental)).thenReturn(rental);
         RentalDto expected = getRentalDto();
-        when(rentalMapper.toDto(rental)).thenReturn(expected);
+        when(rentalMapper.toDto(rental, car)).thenReturn(expected);
         when(notificationService.sendNotification(any(TelegramMessageRequest.class)))
                 .thenReturn("OK");
 
@@ -137,7 +137,7 @@ public class RentalServiceImplTest {
         when(carRepository.save(car)).thenReturn(minusQuantity);
         when(rentalRepository.save(rental)).thenReturn(rental);
         RentalDto expected = getRentalDto();
-        when(rentalMapper.toDto(rental)).thenReturn(expected);
+        when(rentalMapper.toDto(rental, car)).thenReturn(expected);
         when(notificationService.sendNotification(any(TelegramMessageRequest.class)))
                 .thenReturn("OK");
 
@@ -226,12 +226,14 @@ public class RentalServiceImplTest {
         User user = getUser();
         Pageable pageable = PageRequest.of(0, 10);
         Rental rental = getRental();
+        Car car = getCar();
         RentalDto rentalDto = getRentalDto();
         Page<Rental> page = new PageImpl<>(List.of(rental), pageable, 1);
         when(userRepository.findByEmail(VALID_EMAIL)).thenReturn(Optional.of(user));
+        when(carRepository.findById(VALID_ID)).thenReturn(Optional.of(car));
         when(rentalRepository.findRentalByActualReturnDate(VALID_ID, RENTAL_IS_ACTIVE, pageable))
                 .thenReturn(page);
-        when(rentalMapper.toDto(rental)).thenReturn(rentalDto);
+        when(rentalMapper.toDto(rental, car)).thenReturn(rentalDto);
 
         //when
         Page<RentalDto> actual = rentalService.getAllActualRentalsByUserId(
@@ -259,10 +261,12 @@ public class RentalServiceImplTest {
         //given
         Rental rental = getRental();
         User user = getUser();
+        Car car = getCar();
         RentalDto expected = getRentalDto();
         when(userRepository.findByEmail(VALID_EMAIL)).thenReturn(Optional.of(user));
         when(rentalRepository.findById(VALID_ID)).thenReturn(Optional.of(rental));
-        when(rentalMapper.toDto(rental)).thenReturn(expected);
+        when(carRepository.findById(VALID_ID)).thenReturn(Optional.of(car));
+        when(rentalMapper.toDto(rental, car)).thenReturn(expected);
 
         //when
         RentalDto actual = rentalService.getSpecificRentalById(VALID_ID, VALID_EMAIL);
@@ -284,6 +288,20 @@ public class RentalServiceImplTest {
     }
 
     @Test
+    void getSpecificRentalById_CarDoesNotExist_ReturnsEntityNotFoundException() {
+        //given
+        User user = getUser();
+        Rental rental = getRental();
+        when(userRepository.findByEmail(VALID_EMAIL)).thenReturn(Optional.of(user));
+        when(rentalRepository.findById(VALID_ID)).thenReturn(Optional.of(rental));
+        when(carRepository.findById(VALID_ID)).thenReturn(Optional.empty());
+
+        //when & then
+        Assertions.assertThrows(EntityNotFoundException.class,
+                () -> rentalService.getSpecificRentalById(VALID_ID, VALID_EMAIL));
+    }
+
+    @Test
     void setActualReturnDate_RentalExist_ReturnsRentalDto() {
         //given
         Rental rental = getRental();
@@ -294,7 +312,7 @@ public class RentalServiceImplTest {
         when(carRepository.findById(VALID_ID)).thenReturn(Optional.of(car));
         when(carRepository.save(car)).thenReturn(car);
         when(rentalRepository.save(rental)).thenReturn(rental);
-        when(rentalMapper.toDto(rental)).thenReturn(expected);
+        when(rentalMapper.toDto(rental, car)).thenReturn(expected);
 
         //when
         RentalDto actual = rentalService.setActualReturnDate(VALID_ID);
@@ -345,6 +363,10 @@ public class RentalServiceImplTest {
         rentalDto.setUserId(VALID_ID);
         rentalDto.setReturnDate(LocalDate.now().plusDays(5));
         rentalDto.setCarId(VALID_ID);
+        rentalDto.setModel("Ibiza");
+        rentalDto.setBrand("Seat");
+        rentalDto.setDailyFee(new BigDecimal(30));
+        rentalDto.setTypeName(TypeName.SEDAN);
         return rentalDto;
     }
 
