@@ -81,7 +81,6 @@ public class RentalControllerTest {
         RentalRequestDto requestDto = new RentalRequestDto();
         requestDto.setReturnDate(null);
         requestDto.setRentalDate(null);
-        requestDto.setUserId(-2L);
         requestDto.setCarId(-3L);
 
         //when & then
@@ -138,7 +137,7 @@ public class RentalControllerTest {
         //given
         RentalDto rentalDto = getRentalDto();
 
-        when(rentalService.getSpecificRentalById(VALID_ID)).thenReturn(rentalDto);
+        when(rentalService.getSpecificRentalById(VALID_ID, VALID_EMAIL)).thenReturn(rentalDto);
 
         //when & then
         MvcResult result = mockMvc.perform(get("/rentals/{id}", VALID_ID)
@@ -153,25 +152,36 @@ public class RentalControllerTest {
     }
 
     @Test
-    @WithMockUser(username = VALID_EMAIL, roles = "CUSTOMER")
-    void getRentalById_ValidIdButBadRole_ReturnsForbidden() throws Exception {
-        //given & when & then
-        mockMvc.perform(get("/rentals/{id}", VALID_ID)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isForbidden());
-    }
-
-    @Test
     @WithMockUser(username = VALID_EMAIL, roles = "MANAGER")
     void getRentalById_InvalidId_ReturnsNotFound() throws Exception {
         //given
-        when(rentalService.getSpecificRentalById(INVALID_ID))
-                .thenThrow(new EntityNotFoundException("User not found"));
+        when(rentalService.getSpecificRentalById(INVALID_ID, VALID_EMAIL))
+                .thenThrow(new EntityNotFoundException("Rental not found"));
 
         //when & then
         mockMvc.perform(get("/rentals/{id}", INVALID_ID)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(username = VALID_EMAIL, roles = "CUSTOMER")
+    void getRentalById_ValidIdButCustomer_ReturnsIsOk() throws Exception {
+        //given
+        RentalDto rentalDto = getRentalDto();
+
+        when(rentalService.getSpecificRentalById(VALID_ID, VALID_EMAIL)).thenReturn(rentalDto);
+
+        //when & then
+        MvcResult result = mockMvc.perform(get("/rentals/{id}", VALID_ID)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String json = result.getResponse().getContentAsString();
+        RentalDto actual = objectMapper.readValue(json, RentalDto.class);
+
+        Assertions.assertEquals(rentalDto, actual);
     }
 
     @Test
@@ -217,7 +227,6 @@ public class RentalControllerTest {
 
     private RentalRequestDto getRentalRequest() {
         RentalRequestDto requestDto = new RentalRequestDto();
-        requestDto.setUserId(VALID_ID);
         requestDto.setCarId(VALID_ID);
         requestDto.setRentalDate(LocalDate.now());
         requestDto.setReturnDate(LocalDate.now().plusDays(5));

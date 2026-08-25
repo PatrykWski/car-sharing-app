@@ -11,9 +11,6 @@ public class RentalRequestDto {
     @Positive
     private Long carId;
     @NotNull
-    @Positive
-    private Long userId;
-    @NotNull
     private LocalDate rentalDate;
     @NotNull
     private LocalDate returnDate;

@@ -54,9 +54,10 @@ public class RentalController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get rental", description = "Get rental by id")
-    @PreAuthorize("hasRole('MANAGER')")
-    public RentalDto getRentalById(@PathVariable Long id) {
-        return rentalService.getSpecificRentalById(id);
+    @PreAuthorize("hasAnyRole('MANAGER', 'CUSTOMER')")
+    public RentalDto getRentalById(@PathVariable Long id,
+                                   @AuthenticationPrincipal UserDetails userDetails) {
+        return rentalService.getSpecificRentalById(id, userDetails.getUsername());
     }
 
     @PutMapping("/return/{id}")

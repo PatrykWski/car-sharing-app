@@ -8,7 +8,6 @@ import static org.mockito.Mockito.when;
 import carsharing.app.dto.rental.RentalDto;
 import carsharing.app.dto.rental.RentalRequestDto;
 import carsharing.app.dto.telegram.TelegramMessageRequest;
-import carsharing.app.exception.AuthenticationException;
 import carsharing.app.exception.EmptyInventoryException;
 import carsharing.app.exception.EntityNotFoundException;
 import carsharing.app.exception.RentalNotFinished;
@@ -77,7 +76,6 @@ public class RentalServiceImplTest {
     void addNewRental_ValidRequestDto_ReturnsRentalDto() {
         //given
         User user = getUser();
-        when(userRepository.findById(VALID_ID)).thenReturn(Optional.of(user));
         when(userRepository.findByEmail(VALID_EMAIL)).thenReturn(Optional.of(user));
         Rental rental = getRental();
         List<Rental> listOfRentals = List.of(rental);
@@ -91,7 +89,6 @@ public class RentalServiceImplTest {
         Car car = getCar();
         when(carRepository.findById(VALID_ID)).thenReturn(Optional.of(car));
         RentalRequestDto requestDto = getRequestDto();
-        requestDto.setUserId(VALID_ID);
         when(rentalMapper.toModel(requestDto)).thenReturn(rental);
         Car minusQuantity = getCar();
         minusQuantity.setInventory(minusQuantity.getInventory() - 1);
@@ -111,29 +108,15 @@ public class RentalServiceImplTest {
     }
 
     @Test
-    void addNewRental_InvalidUserId_ThrowsNotFound() {
-        //given
-        RentalRequestDto requestDto = getRequestDto();
-        requestDto.setUserId(INVALID_ID);
-        when(userRepository.findById(INVALID_ID))
-                .thenThrow(new EntityNotFoundException("User not found"));
-
-        //when & then
-        Assertions.assertThrows(EntityNotFoundException.class,
-                () -> rentalService.addNewRental(VALID_EMAIL, requestDto));
-    }
-
-    @Test
     void addNewRental_InvalidUserEmail_ThrowsNotFound() {
         //given
         User user = getUser();
         user.setId(VALID_ID);
         RentalRequestDto requestDto = getRequestDto();
-        requestDto.setUserId(VALID_ID);
-        when(userRepository.findById(VALID_ID)).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail(INVALID_EMAIL)).thenReturn(Optional.of(user));
 
         //when & then
-        Assertions.assertThrows(AuthenticationException.class,
+        Assertions.assertThrows(EntityNotFoundException.class,
                 () -> rentalService.addNewRental(INVALID_EMAIL, requestDto));
     }
 
@@ -141,14 +124,12 @@ public class RentalServiceImplTest {
     void addNewRental_UserWithoutRentals_ReturnsRentalDto() {
         //given
         User user = getUser();
-        when(userRepository.findById(VALID_ID)).thenReturn(Optional.of(user));
         when(userRepository.findByEmail(VALID_EMAIL)).thenReturn(Optional.of(user));
         List<Rental> listOfRentals = List.of();
         when(rentalRepository.findRentalByUserId(user.getId())).thenReturn(listOfRentals);
         Car car = getCar();
         when(carRepository.findById(VALID_ID)).thenReturn(Optional.of(car));
         RentalRequestDto requestDto = getRequestDto();
-        requestDto.setUserId(VALID_ID);
         Rental rental = getRental();
         when(rentalMapper.toModel(requestDto)).thenReturn(rental);
         Car minusQuantity = getCar();
@@ -172,10 +153,7 @@ public class RentalServiceImplTest {
     void addNewRental_UserWithPendingPayments_ThrowsRentalNotFinished() {
         //given
         User user = getUser();
-        RentalRequestDto requestDto = getRequestDto();
-        requestDto.setUserId(VALID_ID);
         Rental rental = getRental();
-        when(userRepository.findById(VALID_ID)).thenReturn(Optional.of(user));
         when(userRepository.findByEmail(VALID_EMAIL)).thenReturn(Optional.of(user));
         List<Rental> listOfRentals = List.of(rental);
         when(rentalRepository.findRentalByUserId(user.getId())).thenReturn(listOfRentals);
@@ -186,6 +164,7 @@ public class RentalServiceImplTest {
                 .map(Rental::getId)
                 .toList();
         when(paymentRepository.findAllByRentalIdIn(listOfRentalIds)).thenReturn(payments);
+        RentalRequestDto requestDto = getRequestDto();
 
         //when & then
         Assertions.assertThrows(RentalNotFinished.class,
@@ -197,7 +176,6 @@ public class RentalServiceImplTest {
         //given
         User user = getUser();
         RentalRequestDto requestDto = getRequestDto();
-        requestDto.setUserId(VALID_ID);
         requestDto.setCarId(INVALID_ID);
 
         Rental rental = getRental();
@@ -208,7 +186,6 @@ public class RentalServiceImplTest {
         Payment payment = getPayment();
         List<Payment> payments = List.of(payment);
 
-        when(userRepository.findById(VALID_ID)).thenReturn(Optional.of(user));
         when(userRepository.findByEmail(VALID_EMAIL)).thenReturn(Optional.of(user));
         when(rentalRepository.findRentalByUserId(user.getId())).thenReturn(listOfRentals);
         when(paymentRepository.findAllByRentalIdIn(listOfRentalIds)).thenReturn(payments);
@@ -223,11 +200,8 @@ public class RentalServiceImplTest {
     void addNewRental_EmptyCarInventory_EmptyInventoryException() {
         //given
         User user = getUser();
-        RentalRequestDto requestDto = getRequestDto();
-        requestDto.setUserId(VALID_ID);
         Rental rental = getRental();
         List<Rental> listOfRentals = List.of(rental);
-        when(userRepository.findById(VALID_ID)).thenReturn(Optional.of(user));
         when(userRepository.findByEmail(VALID_EMAIL)).thenReturn(Optional.of(user));
         when(rentalRepository.findRentalByUserId(user.getId())).thenReturn(listOfRentals);
         List<Long> listOfRentalIds = listOfRentals.stream()
@@ -239,6 +213,7 @@ public class RentalServiceImplTest {
         Car car = getCar();
         car.setInventory(0);
         when(carRepository.findById(VALID_ID)).thenReturn(Optional.of(car));
+        RentalRequestDto requestDto = getRequestDto();
 
         //when & then
         Assertions.assertThrows(EmptyInventoryException.class,
@@ -253,7 +228,7 @@ public class RentalServiceImplTest {
         Rental rental = getRental();
         RentalDto rentalDto = getRentalDto();
         Page<Rental> page = new PageImpl<>(List.of(rental), pageable, 1);
-        when(userRepository.findById(VALID_ID)).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail(VALID_EMAIL)).thenReturn(Optional.of(user));
         when(rentalRepository.findRentalByActualReturnDate(VALID_ID, RENTAL_IS_ACTIVE, pageable))
                 .thenReturn(page);
         when(rentalMapper.toDto(rental)).thenReturn(rentalDto);
@@ -271,7 +246,7 @@ public class RentalServiceImplTest {
     void getAllActualRentalsByUserId_UserDoesNotExist_ThrowEntityNotFoundException() {
         //given
         Pageable pageable = PageRequest.of(0, 10);
-        when(userRepository.findById(INVALID_ID)).thenReturn(Optional.empty());
+        when(userRepository.findByEmail(VALID_EMAIL)).thenReturn(Optional.empty());
 
         //when & then
         Assertions.assertThrows(EntityNotFoundException.class,
@@ -283,12 +258,14 @@ public class RentalServiceImplTest {
     void getSpecificRentalById_RentalExist_ReturnsRentalDto() {
         //given
         Rental rental = getRental();
+        User user = getUser();
         RentalDto expected = getRentalDto();
+        when(userRepository.findByEmail(VALID_EMAIL)).thenReturn(Optional.of(user));
         when(rentalRepository.findById(VALID_ID)).thenReturn(Optional.of(rental));
         when(rentalMapper.toDto(rental)).thenReturn(expected);
 
         //when
-        RentalDto actual = rentalService.getSpecificRentalById(VALID_ID);
+        RentalDto actual = rentalService.getSpecificRentalById(VALID_ID, VALID_EMAIL);
 
         //then
         Assertions.assertEquals(expected, actual);
@@ -297,22 +274,20 @@ public class RentalServiceImplTest {
     @Test
     void getSpecificRentalById_RentalDoesNotExist_ReturnsEntityNotFoundException() {
         //given
+        User user = getUser();
+        when(userRepository.findByEmail(VALID_EMAIL)).thenReturn(Optional.of(user));
         when(rentalRepository.findById(INVALID_ID)).thenReturn(Optional.empty());
 
         //when & then
         Assertions.assertThrows(EntityNotFoundException.class,
-                () -> rentalService.getSpecificRentalById(INVALID_ID));
+                () -> rentalService.getSpecificRentalById(INVALID_ID, VALID_EMAIL));
     }
 
     @Test
     void setActualReturnDate_RentalExist_ReturnsRentalDto() {
         //given
         Rental rental = getRental();
-        rental.setActualReturnDate(LocalDate.now());
-
         RentalDto expected = getRentalDto();
-        expected.setActualReturnDate(LocalDate.now());
-
         Car car = getCar();
 
         when(rentalRepository.findById(VALID_ID)).thenReturn(Optional.of(rental));
@@ -336,6 +311,18 @@ public class RentalServiceImplTest {
         //when & then
         Assertions.assertThrows(EntityNotFoundException.class,
                 () -> rentalService.setActualReturnDate(INVALID_ID));
+    }
+
+    @Test
+    void setActualReturnDate_RentalActualReturnDateIsNotNull_ThrowsEntityNotFoundException() {
+        //given
+        Rental rental = getRental();
+        rental.setActualReturnDate(LocalDate.now());
+        when(rentalRepository.findById(VALID_ID)).thenReturn(Optional.of(rental));
+
+        //when & then
+        Assertions.assertThrows(EntityNotFoundException.class,
+                () -> rentalService.setActualReturnDate(VALID_ID));
     }
 
     @Test

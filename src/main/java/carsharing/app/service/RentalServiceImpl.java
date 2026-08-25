@@ -3,7 +3,6 @@ package carsharing.app.service;
 import carsharing.app.dto.rental.RentalDto;
 import carsharing.app.dto.rental.RentalRequestDto;
 import carsharing.app.dto.telegram.TelegramMessageRequest;
-import carsharing.app.exception.AuthenticationException;
 import carsharing.app.exception.EmptyInventoryException;
 import carsharing.app.exception.EntityNotFoundException;
 import carsharing.app.exception.NotificationError;
@@ -12,6 +11,7 @@ import carsharing.app.mapper.RentalMapper;
 import carsharing.app.model.Car;
 import carsharing.app.model.Payment;
 import carsharing.app.model.Rental;
+import carsharing.app.model.RoleName;
 import carsharing.app.model.StatusName;
 import carsharing.app.model.User;
 import carsharing.app.repository.CarRepository;
@@ -45,8 +45,7 @@ public class RentalServiceImpl implements RentalService {
     @Override
     @Transactional
     public RentalDto addNewRental(String email, RentalRequestDto requestDto) {
-        checkIfUserExist(requestDto.getUserId(), email);
-        User user = userRepository.findByEmail(email).get();
+        User user = checkIfUserExist(email);
 
         validateNoPendingPayments(user.getId());
 
@@ -75,28 +74,44 @@ public class RentalServiceImpl implements RentalService {
     @Transactional(readOnly = true)
     public Page<RentalDto> getAllActualRentalsByUserId(Long userId, String email,
                                                        boolean isActive, Pageable pageable) {
-        checkIfUserExist(userId, email);
-        return rentalRepository.findRentalByActualReturnDate(userId, isActive, pageable)
+        User user = checkIfUserExist(email);
+        if (user.getRoleName().equals(RoleName.MANAGER)) {
+            return rentalRepository.findRentalByActualReturnDate(userId, isActive, pageable)
+                    .map(rentalMapper::toDto);
+        }
+        return rentalRepository.findRentalByActualReturnDate(user.getId(), isActive, pageable)
                 .map(rentalMapper::toDto);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public RentalDto getSpecificRentalById(Long id) {
+    public RentalDto getSpecificRentalById(Long id, String email) {
+        User user = checkIfUserExist(email);
         Rental rental = getRentalById(id);
-        return rentalMapper.toDto(rental);
+        if (user.getRoleName().equals(RoleName.MANAGER)) {
+            return rentalMapper.toDto(rental);
+        }
+
+        if (rental.getUserId().equals(user.getId())) {
+            return rentalMapper.toDto(rental);
+        }
+        throw new EntityNotFoundException("Rental with id: " + id + " doesn't exist");
+        // Entity Not Found so outsider doesn't know if rental actually exist or not
     }
 
     @Override
     @Transactional
     public RentalDto setActualReturnDate(Long id) {
         Rental rental = getRentalById(id);
-        rental.setActualReturnDate(LocalDate.now());
-        Car car = getCar(rental.getCarId());
-        car.setInventory(car.getInventory() + 1);
-        carRepository.save(car);
-        Rental savedRental = rentalRepository.save(rental);
-        return rentalMapper.toDto(savedRental);
+        if (rental.getActualReturnDate() == null) {
+            rental.setActualReturnDate(LocalDate.now());
+            Car car = getCar(rental.getCarId());
+            car.setInventory(car.getInventory() + 1);
+            carRepository.save(car);
+            Rental savedRental = rentalRepository.save(rental);
+            return rentalMapper.toDto(savedRental);
+        }
+        throw new EntityNotFoundException("Rental with id: " + id + " is already returned");
     }
 
     private Car getCar(Long id) {
@@ -105,13 +120,9 @@ public class RentalServiceImpl implements RentalService {
                         + id + " doesn't exist"));
     }
 
-    private void checkIfUserExist(Long id, String email) {
-        User user = userRepository.findById(id).orElseThrow(
-                () -> new EntityNotFoundException("User with id: "
-                        + id + " doesn't exist"));
-        if (!user.getEmail().equals(email)) {
-            throw new AuthenticationException("Email in token doesn't match user with id: " + id);
-        }
+    private User checkIfUserExist(String email) {
+        return userRepository.findByEmail(email).orElseThrow(
+                () -> new EntityNotFoundException("User does not exist"));
     }
 
     private Rental getRentalById(Long id) {

@@ -11,7 +11,7 @@ public interface RentalService {
     Page<RentalDto> getAllActualRentalsByUserId(Long userId, String email,
                                                 boolean isActive, Pageable pageable);
 
-    RentalDto getSpecificRentalById(Long id);
+    RentalDto getSpecificRentalById(Long id, String email);
 
     RentalDto setActualReturnDate(Long id);
 
