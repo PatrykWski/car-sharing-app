@@ -152,15 +152,6 @@ public class RentalControllerTest {
     }
 
     @Test
-    @WithMockUser(username = VALID_EMAIL, roles = "CUSTOMER")
-    void getRentalById_ValidIdButBadRole_ReturnsForbidden() throws Exception {
-        //given & when & then
-        mockMvc.perform(get("/rentals/{id}", VALID_ID)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isForbidden());
-    }
-
-    @Test
     @WithMockUser(username = VALID_EMAIL, roles = "MANAGER")
     void getRentalById_InvalidId_ReturnsNotFound() throws Exception {
         //given

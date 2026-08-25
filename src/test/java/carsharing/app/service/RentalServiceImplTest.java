@@ -228,7 +228,7 @@ public class RentalServiceImplTest {
         Rental rental = getRental();
         RentalDto rentalDto = getRentalDto();
         Page<Rental> page = new PageImpl<>(List.of(rental), pageable, 1);
-        when(userRepository.findById(VALID_ID)).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail(VALID_EMAIL)).thenReturn(Optional.of(user));
         when(rentalRepository.findRentalByActualReturnDate(VALID_ID, RENTAL_IS_ACTIVE, pageable))
                 .thenReturn(page);
         when(rentalMapper.toDto(rental)).thenReturn(rentalDto);
@@ -246,7 +246,7 @@ public class RentalServiceImplTest {
     void getAllActualRentalsByUserId_UserDoesNotExist_ThrowEntityNotFoundException() {
         //given
         Pageable pageable = PageRequest.of(0, 10);
-        when(userRepository.findById(INVALID_ID)).thenReturn(Optional.empty());
+        when(userRepository.findByEmail(VALID_EMAIL)).thenReturn(Optional.empty());
 
         //when & then
         Assertions.assertThrows(EntityNotFoundException.class,
