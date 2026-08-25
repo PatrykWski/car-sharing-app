@@ -258,12 +258,14 @@ public class RentalServiceImplTest {
     void getSpecificRentalById_RentalExist_ReturnsRentalDto() {
         //given
         Rental rental = getRental();
+        User user = getUser();
         RentalDto expected = getRentalDto();
+        when(userRepository.findByEmail(VALID_EMAIL)).thenReturn(Optional.of(user));
         when(rentalRepository.findById(VALID_ID)).thenReturn(Optional.of(rental));
         when(rentalMapper.toDto(rental)).thenReturn(expected);
 
         //when
-        RentalDto actual = rentalService.getSpecificRentalById(VALID_ID);
+        RentalDto actual = rentalService.getSpecificRentalById(VALID_ID, VALID_EMAIL);
 
         //then
         Assertions.assertEquals(expected, actual);
@@ -272,11 +274,13 @@ public class RentalServiceImplTest {
     @Test
     void getSpecificRentalById_RentalDoesNotExist_ReturnsEntityNotFoundException() {
         //given
+        User user = getUser();
+        when(userRepository.findByEmail(VALID_EMAIL)).thenReturn(Optional.of(user));
         when(rentalRepository.findById(INVALID_ID)).thenReturn(Optional.empty());
 
         //when & then
         Assertions.assertThrows(EntityNotFoundException.class,
-                () -> rentalService.getSpecificRentalById(INVALID_ID));
+                () -> rentalService.getSpecificRentalById(INVALID_ID, VALID_EMAIL));
     }
 
     @Test

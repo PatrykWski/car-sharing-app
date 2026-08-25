@@ -85,9 +85,18 @@ public class RentalServiceImpl implements RentalService {
 
     @Override
     @Transactional(readOnly = true)
-    public RentalDto getSpecificRentalById(Long id) {
+    public RentalDto getSpecificRentalById(Long id, String email) {
+        User user = checkIfUserExist(email);
         Rental rental = getRentalById(id);
-        return rentalMapper.toDto(rental);
+        if (user.getRoleName().equals(RoleName.MANAGER)) {
+            return rentalMapper.toDto(rental);
+        }
+
+        if (rental.getUserId().equals(user.getId())) {
+            return rentalMapper.toDto(rental);
+        }
+        throw new EntityNotFoundException("Rental with id: " + id + " doesn't exist");
+        // Entity Not Found so outsider doesn't know if rental actually exist or not
     }
 
     @Override
