@@ -15,8 +15,8 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class StandardPayment implements PaymentMethod {
-    private final RentalRepository rentalRepository;
-    private final CarRepository carRepository;
+    protected final RentalRepository rentalRepository;
+    protected final CarRepository carRepository;
 
     @Override
     public BigDecimal totalToPay(Long rentalId) {

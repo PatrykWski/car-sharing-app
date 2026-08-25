@@ -59,7 +59,8 @@ public class PaymentControllerTest {
     @WithMockUser(username = VALID_EMAIL, roles = "MANAGER")
     void createStripeSession_ValidRequestDto_ReturnsStatusCreated() throws Exception {
         //given
-        CreatePaymentRequestDto createPaymentRequestDto = new CreatePaymentRequestDto(VALID_ID);
+        CreatePaymentRequestDto createPaymentRequestDto = new CreatePaymentRequestDto(
+                VALID_ID, PaymentType.PAYMENT);
         PaymentDto expected = getPaymentDto();
 
         when(paymentService.createStripeSession(VALID_EMAIL, createPaymentRequestDto))
@@ -81,7 +82,8 @@ public class PaymentControllerTest {
     @WithMockUser(username = VALID_EMAIL, roles = "MANAGER")
     void createStripeSession_InvalidRequest_ReturnsStatusBadRequest() throws Exception {
         //given
-        CreatePaymentRequestDto createPaymentRequestDto = new CreatePaymentRequestDto(INVALID_ID);
+        CreatePaymentRequestDto createPaymentRequestDto = new CreatePaymentRequestDto(
+                INVALID_ID, null);
 
         //when & then
         mockMvc.perform(post("/payments")

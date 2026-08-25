@@ -77,9 +77,8 @@ public class PaymentServiceImpl implements PaymentService {
         User user = getUser(rental.getUserId());
 
         if (email.equals(user.getEmail())) {
-            PaymentType paymentType = determinePaymentType(rental);
 
-            BigDecimal amountToPay = amountToPay(rental, paymentType);
+            BigDecimal amountToPay = amountToPay(rental, request.type());
 
             long amountInCents = amountToPay.multiply(BigDecimal.valueOf(100)).longValue();
 
@@ -90,7 +89,7 @@ public class PaymentServiceImpl implements PaymentService {
 
                 Payment payment = createPayment(
                         request.rentalId(), amountToPay, session.getUrl(), session.getId(),
-                        paymentType);
+                        request.type());
 
                 paymentRepository.save(payment);
 
@@ -246,13 +245,5 @@ public class PaymentServiceImpl implements PaymentService {
         return rentalRepository.findById(rentalId).orElseThrow(
                 () -> new EntityNotFoundException("Rental with id: " + rentalId
                         + " doesn't exist"));
-    }
-
-    private PaymentType determinePaymentType(Rental rental) {
-        if (rental.getActualReturnDate() != null
-                && rental.getActualReturnDate().isAfter(rental.getReturnDate())) {
-            return PaymentType.FINE;
-        }
-        return PaymentType.PAYMENT;
     }
 }
