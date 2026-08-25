@@ -108,7 +108,6 @@ public class CarControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "user", roles = {"CUSTOMER", "MANAGER"})
     void getPageOfCars_CarsExist_ReturnsStatusOk() throws Exception {
         //given
         Pageable pageable = PageRequest.of(0, 10, Sort.by("brand"));
@@ -126,7 +125,6 @@ public class CarControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "customer", roles = "CUSTOMER")
     void getPageOfCars_CarsDoesNotExist_ReturnsStatusOk() throws Exception {
         //given
         Pageable pageable = PageRequest.of(0, 10, Sort.by("brand"));
@@ -143,7 +141,6 @@ public class CarControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "user", roles = {"CUSTOMER", "MANAGER"})
     void getCarById_ValidId_ReturnsStatusOk() throws Exception {
         //given
         CarDto expected = getCarDto();
@@ -157,7 +154,6 @@ public class CarControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "customer", roles = "CUSTOMER")
     void getCarById_InvalidId_ReturnsNotFound() throws Exception {
         //given
         when(carService.getCarById(INVALID_ID))

@@ -41,7 +41,6 @@ public class CarController {
 
     @GetMapping
     @Operation(summary = "Get all cars", description = "Get all cars sorted by brand")
-    @PreAuthorize("hasAnyRole('MANAGER', 'CUSTOMER')")
     public Page<CarDto> getPageOfCars(
             @ParameterObject @PageableDefault(page = 0, size = 10, sort = "brand")
             Pageable pageable) {
@@ -50,7 +49,6 @@ public class CarController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get a car", description = "Get a car by his ID")
-    @PreAuthorize("hasAnyRole('MANAGER', 'CUSTOMER')")
     public CarDto getCarById(@PathVariable Long id) {
         return carService.getCarById(id);
     }
