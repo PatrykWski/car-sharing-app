@@ -8,6 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.math.BigDecimal;
 import java.util.Objects;
 import lombok.Getter;
@@ -32,6 +33,8 @@ public class Car {
     private int inventory;
     @Column(nullable = false)
     private BigDecimal dailyFee;
+    @Version
+    private Long version;
 
     @Override
     public boolean equals(Object o) {

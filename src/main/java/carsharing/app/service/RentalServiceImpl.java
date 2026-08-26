@@ -28,6 +28,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @RequiredArgsConstructor
 @Service
@@ -57,12 +59,23 @@ public class RentalServiceImpl implements RentalService {
             carRepository.save(car);
             Rental savedRental = rentalRepository.save(rental);
 
-            TelegramMessageRequest telegramMessageRequest = new TelegramMessageRequest(
+            String message = getSuccessfulMessage(savedRental, car, user);
+            TelegramMessageRequest request = new TelegramMessageRequest(
                     chatId,
-                    "New rental has been successfully created"
-            );
+                    message);
 
-            sendNotification(telegramMessageRequest);
+            if (TransactionSynchronizationManager.isSynchronizationActive()) {
+
+                TransactionSynchronizationManager.registerSynchronization(
+                        new TransactionSynchronization() {
+                            @Override
+                            public void afterCommit() {
+                                sendNotification(request);
+                            }
+                        });
+            } else {
+                sendNotification(request);
+            }
 
             return rentalMapper.toDto(savedRental, car);
         }
@@ -157,5 +170,18 @@ public class RentalServiceImpl implements RentalService {
                 throw new RentalNotFinished("Can't rent new car before paying for previous one");
             }
         }
+    }
+
+    private String getSuccessfulMessage(Rental rental, Car car, User user) {
+        return String.format(
+                "Car rental successfully created! \nRentalID: %d \nCarID: %d"
+                        + "\nModel: %s \nBrand: %s \nCustomer: "
+                        + "\n Name: %s LastName: %s",
+                rental.getId(),
+                car.getId(),
+                car.getModel(),
+                car.getBrand(),
+                user.getFirstName(),
+                user.getLastName());
     }
 }
