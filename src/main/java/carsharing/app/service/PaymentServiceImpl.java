@@ -143,17 +143,17 @@ public class PaymentServiceImpl implements PaymentService {
 
                 TransactionSynchronizationManager
                         .registerSynchronization(new TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-                        String message = getSuccessfulMessage(savedPayment);
+                            @Override
+                            public void afterCommit() {
+                                String message = getSuccessfulMessage(savedPayment);
 
-                        TelegramMessageRequest telegramMessageRequest = new TelegramMessageRequest(
-                                chatId,
-                                message);
+                                TelegramMessageRequest request = new TelegramMessageRequest(
+                                        chatId,
+                                        message);
 
-                        sendNotification(telegramMessageRequest);
-                    }
-                });
+                                sendNotification(request);
+                            }
+                        });
 
                 return paymentMapper.toDto(payment);
             }
@@ -265,8 +265,8 @@ public class PaymentServiceImpl implements PaymentService {
 
     private String getSuccessfulMessage(Payment payment) {
         return String.format(
-                "Payment has been successfully paid! \nPaymentID: %d" +
-                        "\nAmount: %s \nRentalID: %d",
+                "Payment has been successfully paid! \nPaymentID: %d"
+                        + "\nAmount: %s \nRentalID: %d",
                 payment.getId(),
                 payment.getAmountToPay(),
                 payment.getRentalId());

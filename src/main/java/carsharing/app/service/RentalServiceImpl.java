@@ -59,19 +59,24 @@ public class RentalServiceImpl implements RentalService {
             carRepository.save(car);
             Rental savedRental = rentalRepository.save(rental);
 
-            TransactionSynchronizationManager.registerSynchronization(
-                    new TransactionSynchronization() {
-                        @Override
-                        public void afterCommit() {
-                            String message = getSuccessfulMessage(savedRental, car, user);
+            String message = getSuccessfulMessage(savedRental, car, user);
+            TelegramMessageRequest request = new TelegramMessageRequest(
+                    chatId,
+                    message);
 
-                            TelegramMessageRequest request = new TelegramMessageRequest(
-                                    chatId,
-                                    message);
+            if (TransactionSynchronizationManager.isSynchronizationActive()) {
 
-                            sendNotification(request);
-                        }
-                    });
+                TransactionSynchronizationManager.registerSynchronization(
+                        new TransactionSynchronization() {
+                            @Override
+                            public void afterCommit() {
+                                sendNotification(request);
+                            }
+                        });
+            } else {
+                sendNotification(request);
+            }
+
             return rentalMapper.toDto(savedRental, car);
         }
         throw new EmptyInventoryException("There are no more cars available with id: "
@@ -169,9 +174,9 @@ public class RentalServiceImpl implements RentalService {
 
     private String getSuccessfulMessage(Rental rental, Car car, User user) {
         return String.format(
-                "Car rental successfully created! \nRentalID: %d \nCarID: %d" +
-                        "\nModel: %s \nBrand: %s \nCustomer: " +
-                        "\n Name: %s LastName: %s",
+                "Car rental successfully created! \nRentalID: %d \nCarID: %d"
+                        + "\nModel: %s \nBrand: %s \nCustomer: "
+                        + "\n Name: %s LastName: %s",
                 rental.getId(),
                 car.getId(),
                 car.getModel(),
