@@ -28,6 +28,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @RequiredArgsConstructor
 @Service
@@ -57,13 +59,17 @@ public class RentalServiceImpl implements RentalService {
             carRepository.save(car);
             Rental savedRental = rentalRepository.save(rental);
 
-            TelegramMessageRequest telegramMessageRequest = new TelegramMessageRequest(
-                    chatId,
-                    "New rental has been successfully created"
-            );
-
-            sendNotification(telegramMessageRequest);
-
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            TelegramMessageRequest request = new TelegramMessageRequest(
+                                    chatId,
+                                    "New rental has been successfully created"
+                            );
+                            sendNotification(request);
+                        }
+                    });
             return rentalMapper.toDto(savedRental, car);
         }
         throw new EmptyInventoryException("There are no more cars available with id: "
