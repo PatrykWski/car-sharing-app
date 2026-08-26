@@ -5,7 +5,7 @@
 This application is a backend implementation of an e-commerce car sharing, designed with a focus on security and clean architecture.
 
 ## Features:
-* Authentication & Authorization: The app uses tokens (JWT) to secure endpoints. It is designed with two roles: 'MANAGER' and 'CUSTOMER'. Each user has their own shopping cart and is able to make an order.
+* Authentication & Authorization: The app uses tokens (JWT) to secure endpoints. It is designed with two roles: 'MANAGER' and 'CUSTOMER'. Each user is able to rent a car or see inventory of the shop.
 * Stripe and telegram bot:
     * Stripe for payment methods. User can pay, cancel or see payments
     * Telegram bot is sending messages to everyone who is on the group chat about new rent or successfull payment,
@@ -33,8 +33,8 @@ This application is a backend implementation of an e-commerce car sharing, desig
 
 ### Dependencies
 
-* Java 22
-* Maven 3.8+
+* Java 17
+* Maven 3.9.9
 * MySQL Database
 * OS: Windows, macOS, Linux
 
@@ -188,7 +188,7 @@ spring.datasource.password=your_password   <-- here u have to write your passwor
 4. Liquibase creates tables automatically - you don't have to create them in database.
 
 5. Create .env file and configure it as u wish, example: 
-* There is .envExampleFile where u can find example .env file with test admin details to test admin endpoints.
+* There is .exampleENV where u can find example .env file with test manager details to test manager endpoints.
 ```
 JWT_SECRET=your_secret_jwt_key
 STRIPE_SECRET_KEY=your_sk_key
@@ -269,9 +269,7 @@ Database connection error: Verify that your MySQL server is running and that the
 
 ## Challenges
 
-One of the main challenges was testing secured endpoints with JWT authentication.
-The problem was solved by changing spring-boot version from 4+ to 3.5.5
-Security context in controller tests.
+Testing payment service was the biggest challenge - it has external API, payment and other small methods in one class which make it hard to test it.
 
 ## Authors
 
