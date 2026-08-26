@@ -38,6 +38,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
@@ -137,14 +139,21 @@ public class PaymentServiceImpl implements PaymentService {
 
                 Payment payment = getPayment(sessionId);
                 payment.setStatusName(StatusName.PAID);
-                paymentRepository.save(payment);
+                Payment savedPayment = paymentRepository.save(payment);
 
-                TelegramMessageRequest telegramMessageRequest = new TelegramMessageRequest(
-                        chatId,
-                        "Payment has been successfully paid"
-                );
+                TransactionSynchronizationManager
+                        .registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        String message = getSuccessfulMessage(savedPayment);
 
-                sendNotification(telegramMessageRequest);
+                        TelegramMessageRequest telegramMessageRequest = new TelegramMessageRequest(
+                                chatId,
+                                message);
+
+                        sendNotification(telegramMessageRequest);
+                    }
+                });
 
                 return paymentMapper.toDto(payment);
             }
@@ -252,5 +261,14 @@ public class PaymentServiceImpl implements PaymentService {
                 .queryParam("session_id", "{CHECKOUT_SESSION_ID}")
                 .build()
                 .toUriString();
+    }
+
+    private String getSuccessfulMessage(Payment payment) {
+        return String.format(
+                "Payment has been successfully paid! \nPaymentID: %d" +
+                        "\nAmount: %s \nRentalID: %d",
+                payment.getId(),
+                payment.getAmountToPay(),
+                payment.getRentalId());
     }
 }
