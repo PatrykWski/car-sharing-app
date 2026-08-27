@@ -9,7 +9,7 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface RentalMapper {
-    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "id", source = "car.id")
     @Mapping(target = "model", source = "car.model")
     @Mapping(target = "brand", source = "car.brand")
     @Mapping(target = "typeName", source = "car.typeName")
