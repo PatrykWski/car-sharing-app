@@ -34,6 +34,7 @@ public class Car {
     @Column(nullable = false)
     private BigDecimal dailyFee;
     @Version
+    @Column(nullable = false)
     private Long version;
 
     @Override
