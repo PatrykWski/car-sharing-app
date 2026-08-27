@@ -145,7 +145,7 @@ erDiagram
     - Permissions free
 * CarController - CRUD operations, pagination and search,
     - Requires 'MANAGER' to create, delete or update a car,
-    - Requires 'MANAGER' or 'CUSTOMER' to get a car or page of books.
+    - Requires 'MANAGER' or 'CUSTOMER' to get a car or page of cars.
 * PaymentController - payment management,
     - Requires 'MANAGER' or 'CUSTOMER' to create payment session or get payments
     - Verify payment or cancel payment are permission free.

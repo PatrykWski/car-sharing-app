@@ -3,7 +3,6 @@ package carsharing.app.service.payment;
 import static org.mockito.Mockito.when;
 
 import carsharing.app.exception.EntityNotFoundException;
-import carsharing.app.exception.RentalNotFinished;
 import carsharing.app.model.Car;
 import carsharing.app.model.Rental;
 import carsharing.app.model.TypeName;
@@ -57,19 +56,6 @@ public class StandardPaymentTest {
         //when & then
         Assertions.assertThrows(EntityNotFoundException.class,
                 () -> standardPayment.totalToPay(INVALID_ID));
-    }
-
-    @Test
-    void totalToPay_ReturnRentalDateNull_ReturnsRentalNotFinishedException() {
-        //given
-        Rental rental = getRental();
-        rental.setActualReturnDate(null);
-
-        when(rentalRepository.findById(VALID_ID)).thenReturn(Optional.of(rental));
-
-        //when & then
-        Assertions.assertThrows(RentalNotFinished.class,
-                () -> standardPayment.totalToPay(VALID_ID));
     }
 
     @Test

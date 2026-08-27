@@ -60,7 +60,7 @@ public class RentalController {
         return rentalService.getSpecificRentalById(id, userDetails.getUsername());
     }
 
-    @PutMapping("/return/{id}")
+    @PutMapping("/{id}/return")
     @Operation(summary = "Set return date", description = "Set actual return date")
     @PreAuthorize("hasRole('MANAGER')")
     public RentalDto setActualReturnDate(@PathVariable Long id) {

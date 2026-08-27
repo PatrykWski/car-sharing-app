@@ -6,6 +6,7 @@ import carsharing.app.dto.telegram.TelegramMessageRequest;
 import carsharing.app.exception.AuthenticationException;
 import carsharing.app.exception.EntityNotFoundException;
 import carsharing.app.exception.NotificationError;
+import carsharing.app.exception.RentalNotFinished;
 import carsharing.app.exception.StripeProcessingException;
 import carsharing.app.mapper.PaymentMapper;
 import carsharing.app.model.Payment;
@@ -197,8 +198,8 @@ public class PaymentServiceImpl implements PaymentService {
     private SessionCreateParams getParams(long amountInCents, Long rentalId) {
         return SessionCreateParams.builder()
                 .setMode(Mode.PAYMENT)
-                .setSuccessUrl(createUrl("success/"))
-                .setCancelUrl(createUrl("cancel/"))
+                .setSuccessUrl(createUrl("success"))
+                .setCancelUrl(createUrl("cancel"))
                 .addLineItem(
                         SessionCreateParams.LineItem.builder()
                                 .setQuantity(1L)
@@ -246,7 +247,16 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private BigDecimal amountToPay(Rental rental, PaymentType paymentType) {
-        return paymentMethods.get(paymentType).totalToPay(rental.getId());
+        if (rental.getActualReturnDate() != null) {
+            BigDecimal standard = paymentMethods.get(PaymentType.PAYMENT)
+                    .totalToPay(rental.getId());
+            if (!rental.getRentalDate().isAfter(rental.getActualReturnDate())) {
+                return standard;
+            }
+            BigDecimal fee = paymentMethods.get(paymentType).totalToPay(rental.getId());
+            return standard.add(fee);
+        }
+        throw new RentalNotFinished("Rental is not finished yet!");
     }
 
     private Rental getRental(Long rentalId) {
@@ -258,7 +268,7 @@ public class PaymentServiceImpl implements PaymentService {
     private String createUrl(String type) {
         return UriComponentsBuilder.fromUriString(url)
                 .path(type)
-                .queryParam("session_id", "{CHECKOUT_SESSION_ID}")
+                .queryParam("sessionId", "{CHECKOUT_SESSION_ID}")
                 .build()
                 .toUriString();
     }

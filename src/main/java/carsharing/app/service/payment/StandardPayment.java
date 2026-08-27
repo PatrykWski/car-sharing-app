@@ -1,7 +1,6 @@
 package carsharing.app.service.payment;
 
 import carsharing.app.exception.EntityNotFoundException;
-import carsharing.app.exception.RentalNotFinished;
 import carsharing.app.model.Car;
 import carsharing.app.model.PaymentType;
 import carsharing.app.model.Rental;
@@ -24,10 +23,6 @@ public class StandardPayment implements PaymentMethod {
         Rental rental = rentalRepository.findById(rentalId).orElseThrow(
                 () -> new EntityNotFoundException("Rental with id: "
                         + rentalId + " doesnt exist"));
-
-        if (rental.getActualReturnDate() == null) {
-            throw new RentalNotFinished("Rental have to be finished, actual return date is null");
-        }
 
         Car car = carRepository.findById(rental.getCarId()).orElseThrow(
                 () -> new EntityNotFoundException("Car with id: " + rental.getCarId()
