@@ -198,8 +198,8 @@ public class PaymentServiceImpl implements PaymentService {
     private SessionCreateParams getParams(long amountInCents, Long rentalId) {
         return SessionCreateParams.builder()
                 .setMode(Mode.PAYMENT)
-                .setSuccessUrl(createUrl("success/"))
-                .setCancelUrl(createUrl("cancel/"))
+                .setSuccessUrl(createUrl("success"))
+                .setCancelUrl(createUrl("cancel"))
                 .addLineItem(
                         SessionCreateParams.LineItem.builder()
                                 .setQuantity(1L)
@@ -268,7 +268,7 @@ public class PaymentServiceImpl implements PaymentService {
     private String createUrl(String type) {
         return UriComponentsBuilder.fromUriString(url)
                 .path(type)
-                .queryParam("session_id", "{CHECKOUT_SESSION_ID}")
+                .queryParam("sessionId", "{CHECKOUT_SESSION_ID}")
                 .build()
                 .toUriString();
     }
