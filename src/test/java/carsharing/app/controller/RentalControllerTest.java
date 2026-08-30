@@ -3,7 +3,6 @@ package carsharing.app.controller;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import carsharing.app.dto.rental.RentalDto;
@@ -100,34 +99,36 @@ public class RentalControllerTest {
                 .thenReturn(Page.empty());
 
         //when & then
-        mockMvc.perform(get("/rentals/{userId}/all", VALID_ID)
+        mockMvc.perform(get("/rentals")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .param("isActive", "true"))
+                        .param("user_id", String.valueOf(VALID_ID))
+                        .param("is_active", "true"))
                 .andExpect(status().isOk());
     }
 
     @Test
     @WithMockUser(username = VALID_EMAIL, roles = "MANAGER")
-    void getAllActualRentalsByUserId_BadId_ReturnsNotFound() throws Exception {
+    void getAllActualRentalsByUserId_OmitUserId_ReturnsOk() throws Exception {
         //given
         Pageable pageable = PageRequest.of(0, 10);
-        when(rentalService.getAllActualRentalsByUserId(INVALID_ID, VALID_EMAIL, false, pageable))
-                .thenThrow(new EntityNotFoundException("User not found"));
+
+        when(rentalService.getAllActualRentalsByUserId(null, VALID_EMAIL, true, pageable))
+                .thenReturn(Page.empty());
 
         //when & then
-        mockMvc.perform(get("/rentals/{userId}/all", INVALID_ID)
+        mockMvc.perform(get("/rentals")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .param("isActive", "false"))
-                .andExpect(status().isNotFound());
+                        .param("is_active", "true"))
+                .andExpect(status().isOk());
     }
 
     @Test
     @WithMockUser(username = VALID_EMAIL, roles = "MANAGER")
     void getAllActualRentalsByUserId_InvalidParams_ReturnsBadRequest() throws Exception {
         //given & when & then
-        mockMvc.perform(get("/rentals/{userId}/all", VALID_ID)
+        mockMvc.perform(get("/rentals")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .param("isActive", "null"))
+                        .param("is_active", "null"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -192,7 +193,7 @@ public class RentalControllerTest {
         when(rentalService.setActualReturnDate(VALID_ID)).thenReturn(rentalDto);
 
         // when & then
-        MvcResult result = mockMvc.perform(put("/rentals/{id}/return", VALID_ID)
+        MvcResult result = mockMvc.perform(post("/rentals/{id}/return", VALID_ID)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -207,7 +208,7 @@ public class RentalControllerTest {
     @WithMockUser(username = VALID_EMAIL, roles = "CUSTOMER")
     void setActualReturnDate_ValidIdButBadRole_ReturnsForbidden() throws Exception {
         //given & when & then
-        mockMvc.perform(put("/rentals/{id}/return", VALID_ID)
+        mockMvc.perform(post("/rentals/{id}/return", VALID_ID)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }
@@ -220,7 +221,7 @@ public class RentalControllerTest {
                 .thenThrow(new EntityNotFoundException("User not found"));
 
         // when & then
-        mockMvc.perform(put("/rentals/{id}/return", INVALID_ID)
+        mockMvc.perform(post("/rentals/{id}/return", INVALID_ID)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
@@ -228,7 +229,6 @@ public class RentalControllerTest {
     private RentalRequestDto getRentalRequest() {
         RentalRequestDto requestDto = new RentalRequestDto();
         requestDto.setCarId(VALID_ID);
-        requestDto.setUserId(VALID_ID);
         requestDto.setRentalDate(LocalDate.now());
         requestDto.setReturnDate(LocalDate.now().plusDays(5));
         return requestDto;
@@ -238,7 +238,6 @@ public class RentalControllerTest {
         RentalDto rentalDto = new RentalDto();
         rentalDto.setId(VALID_ID);
         rentalDto.setCarId(VALID_ID);
-        rentalDto.setUserId(VALID_ID);
         rentalDto.setRentalDate(LocalDate.now());
         rentalDto.setReturnDate(LocalDate.now().plusDays(5));
         rentalDto.setActualReturnDate(null);

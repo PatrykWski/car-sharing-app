@@ -29,7 +29,7 @@ public class RentalCheckScheduler {
     public void checkIfRentalReturnDateIsNotLate() {
         List<Rental> rentals = rentalRepository.findAll();
         List<Rental> listOfLateRentals = rentals.stream()
-                .filter(rental -> rental.getReturnDate().isBefore(LocalDate.now().plusDays(1)))
+                .filter(rental -> rental.getReturnDate().isBefore(LocalDate.now().plusDays(2)))
                 .filter(rental -> rental.getActualReturnDate() == null)
                 .toList();
         if (!listOfLateRentals.isEmpty()) {

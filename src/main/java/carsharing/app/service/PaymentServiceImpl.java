@@ -250,8 +250,11 @@ public class PaymentServiceImpl implements PaymentService {
         if (rental.getActualReturnDate() != null) {
             BigDecimal standard = paymentMethods.get(PaymentType.PAYMENT)
                     .totalToPay(rental.getId());
-            if (!rental.getRentalDate().isAfter(rental.getActualReturnDate())) {
+            if (!rental.getActualReturnDate().isAfter(rental.getReturnDate())) {
                 return standard;
+            }
+            if (paymentType == PaymentType.FINE) {
+                return paymentMethods.get(PaymentType.FINE).totalToPay(rental.getId());
             }
             BigDecimal fee = paymentMethods.get(paymentType).totalToPay(rental.getId());
             return standard.add(fee);

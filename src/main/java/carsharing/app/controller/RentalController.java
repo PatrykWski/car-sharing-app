@@ -17,7 +17,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -40,14 +39,15 @@ public class RentalController {
         return rentalService.addNewRental(userDetails.getUsername(), requestDto);
     }
 
-    @GetMapping("/{userId}/all")
+    @GetMapping
     @Operation(summary = "Get rentals", description = "Get rentals by user id")
     @PreAuthorize("hasAnyRole('MANAGER', 'CUSTOMER')")
-    public Page<RentalDto> getAllActualRentalsByUserId(@PathVariable Long userId,
-                                                 @AuthenticationPrincipal UserDetails userDetails,
-                                                 @RequestParam boolean isActive,
-                                                 @PageableDefault(size = 10, page = 0)
-                                                 Pageable pageable) {
+    public Page<RentalDto> getAllActualRentalsByUserId(
+            @RequestParam(name = "user_id", required = false) Long userId,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(name = "is_active", required = false) boolean isActive,
+            @PageableDefault(size = 10, page = 0)
+            Pageable pageable) {
         return rentalService.getAllActualRentalsByUserId(userId, userDetails.getUsername(),
                 isActive, pageable);
     }
@@ -60,7 +60,7 @@ public class RentalController {
         return rentalService.getSpecificRentalById(id, userDetails.getUsername());
     }
 
-    @PutMapping("/{id}/return")
+    @PostMapping("/{id}/return")
     @Operation(summary = "Set return date", description = "Set actual return date")
     @PreAuthorize("hasRole('MANAGER')")
     public RentalDto setActualReturnDate(@PathVariable Long id) {
