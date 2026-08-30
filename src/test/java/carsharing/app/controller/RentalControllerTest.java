@@ -100,34 +100,36 @@ public class RentalControllerTest {
                 .thenReturn(Page.empty());
 
         //when & then
-        mockMvc.perform(get("/rentals/{userId}/all", VALID_ID)
+        mockMvc.perform(get("/rentals")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .param("isActive", "true"))
+                        .param("user_id", String.valueOf(VALID_ID))
+                        .param("is_active", "true"))
                 .andExpect(status().isOk());
     }
 
     @Test
     @WithMockUser(username = VALID_EMAIL, roles = "MANAGER")
-    void getAllActualRentalsByUserId_BadId_ReturnsNotFound() throws Exception {
+    void getAllActualRentalsByUserId_OmitUserId_ReturnsOk() throws Exception {
         //given
         Pageable pageable = PageRequest.of(0, 10);
-        when(rentalService.getAllActualRentalsByUserId(INVALID_ID, VALID_EMAIL, false, pageable))
-                .thenThrow(new EntityNotFoundException("User not found"));
+
+        when(rentalService.getAllActualRentalsByUserId(null, VALID_EMAIL, true, pageable))
+                .thenReturn(Page.empty());
 
         //when & then
-        mockMvc.perform(get("/rentals/{userId}/all", INVALID_ID)
+        mockMvc.perform(get("/rentals")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .param("isActive", "false"))
-                .andExpect(status().isNotFound());
+                        .param("is_active", "true"))
+                .andExpect(status().isOk());
     }
 
     @Test
     @WithMockUser(username = VALID_EMAIL, roles = "MANAGER")
     void getAllActualRentalsByUserId_InvalidParams_ReturnsBadRequest() throws Exception {
         //given & when & then
-        mockMvc.perform(get("/rentals/{userId}/all", VALID_ID)
+        mockMvc.perform(get("/rentals")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .param("isActive", "null"))
+                        .param("is_active", "null"))
                 .andExpect(status().isBadRequest());
     }
 
