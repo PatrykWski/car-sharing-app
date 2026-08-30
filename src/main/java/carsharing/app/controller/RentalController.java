@@ -17,7 +17,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -61,7 +60,7 @@ public class RentalController {
         return rentalService.getSpecificRentalById(id, userDetails.getUsername());
     }
 
-    @PutMapping("/{id}/return")
+    @PostMapping("/{id}/return")
     @Operation(summary = "Set return date", description = "Set actual return date")
     @PreAuthorize("hasRole('MANAGER')")
     public RentalDto setActualReturnDate(@PathVariable Long id) {

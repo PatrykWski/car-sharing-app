@@ -3,7 +3,6 @@ package carsharing.app.controller;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import carsharing.app.dto.rental.RentalDto;
@@ -194,7 +193,7 @@ public class RentalControllerTest {
         when(rentalService.setActualReturnDate(VALID_ID)).thenReturn(rentalDto);
 
         // when & then
-        MvcResult result = mockMvc.perform(put("/rentals/{id}/return", VALID_ID)
+        MvcResult result = mockMvc.perform(post("/rentals/{id}/return", VALID_ID)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -209,7 +208,7 @@ public class RentalControllerTest {
     @WithMockUser(username = VALID_EMAIL, roles = "CUSTOMER")
     void setActualReturnDate_ValidIdButBadRole_ReturnsForbidden() throws Exception {
         //given & when & then
-        mockMvc.perform(put("/rentals/{id}/return", VALID_ID)
+        mockMvc.perform(post("/rentals/{id}/return", VALID_ID)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }
@@ -222,7 +221,7 @@ public class RentalControllerTest {
                 .thenThrow(new EntityNotFoundException("User not found"));
 
         // when & then
-        mockMvc.perform(put("/rentals/{id}/return", INVALID_ID)
+        mockMvc.perform(post("/rentals/{id}/return", INVALID_ID)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
