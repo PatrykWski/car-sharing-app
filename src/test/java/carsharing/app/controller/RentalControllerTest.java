@@ -228,7 +228,6 @@ public class RentalControllerTest {
     private RentalRequestDto getRentalRequest() {
         RentalRequestDto requestDto = new RentalRequestDto();
         requestDto.setCarId(VALID_ID);
-        requestDto.setUserId(VALID_ID);
         requestDto.setRentalDate(LocalDate.now());
         requestDto.setReturnDate(LocalDate.now().plusDays(5));
         return requestDto;
@@ -238,7 +237,6 @@ public class RentalControllerTest {
         RentalDto rentalDto = new RentalDto();
         rentalDto.setId(VALID_ID);
         rentalDto.setCarId(VALID_ID);
-        rentalDto.setUserId(VALID_ID);
         rentalDto.setRentalDate(LocalDate.now());
         rentalDto.setReturnDate(LocalDate.now().plusDays(5));
         rentalDto.setActualReturnDate(null);

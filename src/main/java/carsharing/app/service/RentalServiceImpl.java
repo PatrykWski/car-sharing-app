@@ -88,12 +88,12 @@ public class RentalServiceImpl implements RentalService {
     public Page<RentalDto> getAllActualRentalsByUserId(Long userId, String email,
                                                        boolean isActive, Pageable pageable) {
         User user = checkIfUserExist(email);
-        if (user.getRoleName().equals(RoleName.MANAGER)) {
-            return rentalRepository.findRentalByActualReturnDate(
-                            userId, isActive, pageable)
-                    .map(rental -> rentalMapper.toDto(rental, getCar(rental.getCarId())));
+        Long targetUserId = userId;
+
+        if (!user.getRoleName().equals(RoleName.MANAGER)) {
+            targetUserId = user.getId();
         }
-        return rentalRepository.findRentalByActualReturnDate(user.getId(), isActive, pageable)
+        return rentalRepository.findRentals(targetUserId, isActive, pageable)
                 .map(rental -> rentalMapper.toDto(rental, getCar(rental.getCarId())));
     }
 

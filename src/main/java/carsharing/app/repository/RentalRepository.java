@@ -13,12 +13,14 @@ import org.springframework.stereotype.Repository;
 public interface RentalRepository extends JpaRepository<Rental, Long> {
 
     @Query("SELECT r FROM Rental r "
-            + "WHERE r.userId = :id AND "
-            + "((:isActive = true AND r.actualReturnDate IS NULL) "
-            + "OR (:isActive = false AND r.actualReturnDate IS NOT NULL))")
-    Page<Rental> findRentalByActualReturnDate(@Param("id") Long id,
-                                              @Param("isActive") boolean isActive,
-                                              Pageable pageable);
+            + "WHERE (:userId IS NULL OR r.userId = :userId) AND "
+            + "(:isActive IS NULL OR "
+            + "  (:isActive = true AND r.actualReturnDate IS NULL) OR "
+            + "  (:isActive = false AND r.actualReturnDate IS NOT NULL)"
+            + ")")
+    Page<Rental> findRentals(@Param("userId") Long userId,
+                             @Param("isActive") Boolean isActive,
+                             Pageable pageable);
 
     List<Rental> findRentalByUserId(Long userId);
 }

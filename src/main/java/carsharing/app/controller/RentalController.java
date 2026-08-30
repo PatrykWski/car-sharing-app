@@ -40,14 +40,15 @@ public class RentalController {
         return rentalService.addNewRental(userDetails.getUsername(), requestDto);
     }
 
-    @GetMapping("/{userId}/all")
+    @GetMapping
     @Operation(summary = "Get rentals", description = "Get rentals by user id")
     @PreAuthorize("hasAnyRole('MANAGER', 'CUSTOMER')")
-    public Page<RentalDto> getAllActualRentalsByUserId(@PathVariable Long userId,
-                                                 @AuthenticationPrincipal UserDetails userDetails,
-                                                 @RequestParam boolean isActive,
-                                                 @PageableDefault(size = 10, page = 0)
-                                                 Pageable pageable) {
+    public Page<RentalDto> getAllActualRentalsByUserId(
+            @RequestParam(name = "user_id", required = false) Long userId,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(name = "is_active", required = false) boolean isActive,
+            @PageableDefault(size = 10, page = 0)
+            Pageable pageable) {
         return rentalService.getAllActualRentalsByUserId(userId, userDetails.getUsername(),
                 isActive, pageable);
     }
