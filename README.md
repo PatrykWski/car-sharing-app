@@ -145,13 +145,13 @@ erDiagram
     - Permissions free
 * CarController - CRUD operations, pagination and search,
     - Requires 'MANAGER' to create, delete or update a car,
-    - Requires 'MANAGER' or 'CUSTOMER' to get a car or page of cars.
+    - Permission free to get a car or page of cars.
 * PaymentController - payment management,
     - Requires 'MANAGER' or 'CUSTOMER' to create payment session or get payments
     - Verify payment or cancel payment are permission free.
 * RentalController - rental management,
     - Requires 'MANAGER' or 'CUSTOMER' to create new rentals,
-    - Requires 'MANAGER' or 'CUSTOMER' to get all rentals, can sort by actual return date.(If it is paid or not)
+    - Requires 'MANAGER' or 'CUSTOMER' to get all rentals, can sort by actual return date.(If car is returned or not)
         - Requires 'MANAGER' to see all rentals by specific user id, customer can see only his own rentals.
     - Requires 'MANAGER' to get rental by ID,
     - Requires 'MANAGER' to set actual rental return date.
